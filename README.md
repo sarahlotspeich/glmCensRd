@@ -1,1 +1,1 @@
-# `glmCensRd`: Fitting generalized linear models with censored covariates in `R`
+# `glmCensRd`: Fitting generalized linear models with censored predictors in `R`
