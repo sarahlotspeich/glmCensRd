@@ -4,24 +4,24 @@
 \alias{loglik_normal_normal}
 \title{Observed-data log-likelihood for normal linear regression with a censored predictor modeled with normal linear regression, also.}
 \usage{
-loglik_normal_normal(params, Y, X, Z = NULL, complete_data)
+loglik_normal_normal(params, Y, X, W, D, Z = NULL, partX = 50, data)
 }
 \arguments{
 \item{Y}{Name of outcome variable.}
 
 \item{X}{Name of censored predictor variable.}
 
-\item{Z}{(Optional) name(s) of additional fully observed covariates. Default is \code{NULL}}
-
-\item{params0}{Parameter values.}
-
 \item{W}{Name of observed (i.e., censored) version of \code{X}.}
 
-\item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{Z}.}
+\item{D}{Name of event indicator, defined to be = 1 if \code{X} was uncensored.}
 
-\item{steptol}{(Fed to \code{nlm()}) A positive scalar providing the minimum allowable relative step length. Default is \code{steptol = 1e-6}.}
+\item{Z}{(Optional) name(s) of additional fully observed covariates. Default is \code{NULL}}
 
-\item{iterlim}{(Fed to \code{nlm()}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{iterlim = 100}.}
+\item{partX}{Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.}
+
+\item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{D}, and \code{Z}.}
+
+\item{params0}{Parameter values.}
 }
 \value{
 A vector containing the approximate integral over the joint density of censored subjects from \code{complete_data_cens}.

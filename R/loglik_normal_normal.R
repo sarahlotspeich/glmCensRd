@@ -4,14 +4,30 @@
 #' @param Y Name of outcome variable.
 #' @param X Name of censored predictor variable.
 #' @param W Name of observed (i.e., censored) version of \code{X}.
+#' @param D Name of event indicator, defined to be = 1 if \code{X} was uncensored.
 #' @param Z (Optional) name(s) of additional fully observed covariates. Default is \code{NULL}
-#' @param data A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{Z}.
-#' @param steptol (Fed to \code{nlm()}) A positive scalar providing the minimum allowable relative step length. Default is \code{steptol = 1e-6}.
-#' @param iterlim (Fed to \code{nlm()}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{iterlim = 100}.
+#' @param partX Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.
+#' @param data A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{D}, and \code{Z}.
 
 #' @return A vector containing the approximate integral over the joint density of censored subjects from \code{complete_data_cens}.
 #'
-loglik_normal_normal <- function(params, Y, X, Z = NULL, complete_data) {
+loglik_normal_normal <- function(params, Y, X, W, D, Z = NULL, partX = 50, data) {
+  ####################################################
+  # Pre-processing ###################################
+  ####################################################
+  # < number of uncensored subjects > ----------------
+  n1 <- sum(data[, D]) # -----------------------------
+  # ---------------- < number of uncensored subjects >
+  # Reordered data to be uncensored first ------------
+  data <- data[order(data[, D], decreasing = TRUE), ]
+  # ------------ Reordered data to be uncensored first
+  # Create subset of uncensored subjects' data -------
+  uncens_data <- data[1:n1, ]
+  # ------- Create subset of uncensored subjects' data
+  # Create subset of censored subjects' data -------
+  cens_data <- data[-c(1:n1), ]
+  # ------- Create subset of censored subjects' data
+
   ####################################################
   # Analysis model P(Y|X,Z) ##########################
   ####################################################
@@ -23,11 +39,11 @@ loglik_normal_normal <- function(params, Y, X, Z = NULL, complete_data) {
   # ----------------------------------- Get parameters
   # Calculate ----------------------------------------
   if (length(Z) > 1) {
-    muY <- beta0 + beta1 * complete_data[, X] + data.matrix(complete_data[, Z]) %*% beta2
+    muY <- beta0 + beta1 * uncens_data[, X] + data.matrix(uncens_data[, Z]) %*% beta2
   } else {
-    muY <- beta0 + beta1 * complete_data[, X]
+    muY <- beta0 + beta1 * uncens_data[, X]
   }
-  eY <- complete_data[, Y] - muY
+  eY <- uncens_data[, Y] - muY
   pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
   # ---------------------------------------- Calculate
   ####################################################
@@ -40,25 +56,58 @@ loglik_normal_normal <- function(params, Y, X, Z = NULL, complete_data) {
   # ----------------------------------- Get parameters
   # Calculate ----------------------------------------
   if (length(Z) > 1) {
-    muX <- eta0 + data.matrix(complete_data[, Z]) %*% eta1
+    muX <- eta0 + data.matrix(uncens_data[, Z]) %*% eta1
   } else {
     muX <- eta0
   }
-  eX <- complete_data[, X] - muX
+  eX <- uncens_data[, X] - muX
   pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
   # ---------------------------------------- Calculate
   ####################################################
   # Calculate joint density P(Y,X,Z) #################
   ####################################################
-  complete_data <- cbind(complete_data, jointP = pYgivXZ * pXgivZ)
+  uncens_data <- data.frame(cbind(uncens_data, jointP = pYgivXZ * pXgivZ))
   ####################################################
   # Calculate the log-likelihood #####################
   ####################################################
   # Log-likelihood contribution of uncensored X ------
-  ll <- sum(log(complete_data[1:n1, "jointP"]))
+  ll <- sum(log(uncens_data[, "jointP"]))
   # ------ Log-likelihood contribution of uncensored X
   # Log-likelihood contribution of censored X --------
-  log_integral <- log(integrateCensRd(X = X, complete_data_cens = complete_data[-c(1:n1), ]))
+  joint_dens <- function(x, Yi, Zi) {
+    # Calculate ----------------------------------------
+    if (length(Z) > 1) {
+      muY <- beta0 + beta1 * matrix(data = x, ncol = 1) + data.matrix(Zi) %*% beta2
+    } else {
+      muY <- beta0 + beta1 * matrix(data = x, ncol = 1)
+    }
+    muY <- data.matrix(muY)
+    eY <- as.numeric(Yi) - muY
+    pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
+    # ---------------------------------------- Calculate
+    ####################################################
+    # Predictor model P(X|Z) ###########################
+    ####################################################
+    # Calculate ----------------------------------------
+    if (length(Z) > 1) {
+      muX <- eta0 + data.matrix(Zi) %*% eta1
+    } else {
+      muX <- eta0
+    }
+    eX <- x - muX
+    pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
+    return(pYgivXZ * pXgivZ)
+  }
+  integrate_joint_dens <- function(data_row) {
+    data_row <- data.frame(t(data_row))
+    joint_dens(x = seq(data_row[, W], data_row[, W] + 1, by = 0.25), Yi = data_row[Y], Zi = data_row[, Z])
+    return(
+      integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
+              Yi = data_row[Y], Zi = data_row[, Z])$value
+    )
+  }
+  integral <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
+  log_integral <- log(integral)
   log_integral[log_integral == -Inf] <- 0
   ll <- ll + sum(log_integral)
   # -------- Log-likelihood contribution of censored X

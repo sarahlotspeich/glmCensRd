@@ -18,6 +18,6 @@ integrateCensRd <- function(X, complete_data_cens) {
   sum_joint <- complete_data_cens[- which_x1, "jointP"] + complete_data_cens[- which_xm, "jointP"]
   # ------------------------------- Create indicator
   # Sum over trapezoids (within id) ----------------
-  integral <- rowsum(x = subtract_X * sum_joint, group = complete_data_cens[- which_x1, "id"])
+  integral <- 1/2 * rowsum(x = subtract_X * sum_joint, group = complete_data_cens[- which_x1, "id"])
   return(integral)
 }
