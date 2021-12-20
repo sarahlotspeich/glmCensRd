@@ -102,8 +102,9 @@ loglik_normal_normal <- function(params, Y, X, W, D, Z = NULL, partX = 50, data)
     data_row <- data.frame(t(data_row))
     joint_dens(x = seq(data_row[, W], data_row[, W] + 1, by = 0.25), Yi = data_row[Y], Zi = data_row[, Z])
     return(
-      integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
-              Yi = data_row[Y], Zi = data_row[, Z])$value
+      tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
+                                Yi = data_row[Y], Zi = data_row[, Z])$value,
+               error = function(err) {0})
     )
   }
   integral <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
@@ -111,6 +112,7 @@ loglik_normal_normal <- function(params, Y, X, W, D, Z = NULL, partX = 50, data)
   log_integral[log_integral == -Inf] <- 0
   ll <- ll + sum(log_integral)
   # -------- Log-likelihood contribution of censored X
-  # Return - log-likelihood for use with nlm() -------
+  # Return - 1 x log-likelihood for use with nlm() ---
   return(- ll)
+  # --- Return - 1 x log-likelihood for use with nlm()
 }
