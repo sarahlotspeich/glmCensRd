@@ -41,7 +41,7 @@ loglik_normal_normal <- function(params, Y, X, W, D, Z = NULL, partX = 50, data)
   # Calculate ----------------------------------------
   muY <- beta0 + beta1 * uncens_data[, X]
   if (length(Z) > 0) {
-    muY <- muY + data.matrix(uncens_data[, Z]) %*% matrix(data = beta2, ncol = 1)
+    muY <- muY + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = beta2, ncol = 1))
   }
   eY <- uncens_data[, Y] - muY
   pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
@@ -58,7 +58,7 @@ loglik_normal_normal <- function(params, Y, X, W, D, Z = NULL, partX = 50, data)
   # Calculate ----------------------------------------
   muX <- eta0
   if (length(Z) > 0) {
-    muX <- muX + data.matrix(uncens_data[, Z]) %*% eta1
+    muX <- muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
   }
   eX <- uncens_data[, X] - muX
   pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
@@ -78,7 +78,7 @@ loglik_normal_normal <- function(params, Y, X, W, D, Z = NULL, partX = 50, data)
     # Calculate ----------------------------------------
     muY <- beta0 + beta1 * matrix(data = x, ncol = 1)
     if (length(Z) > 0) {
-      muY <- muY + data.matrix(Zi) %*% beta2
+      muY <- muY + as.numeric(data.matrix(Zi) %*% matrix(data = beta2, ncol = 1))
     }
     muY <- data.matrix(muY)
     eY <- as.numeric(Yi) - muY
@@ -90,7 +90,7 @@ loglik_normal_normal <- function(params, Y, X, W, D, Z = NULL, partX = 50, data)
     # Calculate ----------------------------------------
     muX <- eta0
     if (length(Z) > 0) {
-      muX <- muX + data.matrix(Zi) %*% eta1
+      muX <- muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
     }
     eX <- x - muX
     pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
