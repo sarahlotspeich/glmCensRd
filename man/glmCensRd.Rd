@@ -12,6 +12,8 @@ glmCensRd(
   D,
   Z = NULL,
   partX = 50,
+  distY = "normal",
+  distX = "normal",
   data,
   steptol = 1e-06,
   iterlim = 100
@@ -31,6 +33,10 @@ glmCensRd(
 \item{Z}{(Optional) name(s) of additional fully observed covariates. Default is \code{NULL}}
 
 \item{partX}{Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.}
+
+\item{distY}{Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.}
+
+\item{distX}{Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.}
 
 \item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 

@@ -98,7 +98,6 @@ loglik_normal_normal <- function(params, Y, X, W, D, Z = NULL, partX = 50, data)
   }
   integrate_joint_dens <- function(data_row) {
     data_row <- data.frame(t(data_row))
-    joint_dens(x = seq(data_row[, W], data_row[, W] + 1, by = 0.25), Yi = data_row[Y], Zi = data_row[, Z])
     return(
       tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
                                 Yi = data_row[Y], Zi = data_row[, Z])$value,
