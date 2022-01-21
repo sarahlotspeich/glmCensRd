@@ -1,6 +1,6 @@
 #' Observed-data log-likelihood
 
-#' @param params0 Parameter values.
+#' @param params Parameter values.
 #' @param Y Name of outcome variable.
 #' @param X Name of censored predictor variable.
 #' @param W Name of observed (i.e., censored) version of \code{X}.
@@ -94,8 +94,8 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     if (length(Z) > 0) {
       muX <- muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
     }
-    eX <- log(x) - muX
-    pXgivZ <- 1 / (x * sqrt(2 * pi * sigX ^ 2)) * exp(- eX ^ 2 / (2 * sigX ^ 2))
+    eX <- log(uncens_data[, X]) - muX
+    pXgivZ <- 1 / (uncens_data[, X] * sqrt(2 * pi * sigX ^ 2)) * exp(- eX ^ 2 / (2 * sigX ^ 2))
     # -------------------------------------- Calculate
   }
   ####################################################

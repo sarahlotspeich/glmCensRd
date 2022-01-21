@@ -18,6 +18,8 @@ loglik(
 )
 }
 \arguments{
+\item{params}{Parameter values.}
+
 \item{Y}{Name of outcome variable.}
 
 \item{X}{Name of censored predictor variable.}
@@ -35,8 +37,6 @@ loglik(
 \item{distX}{Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.}
 
 \item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{D}, and \code{Z}.}
-
-\item{params0}{Parameter values.}
 }
 \value{
 A vector containing the approximate integral over the joint density of censored subjects from \code{complete_data_cens}.
