@@ -131,18 +131,25 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
       if (!is.null(Z)) { beta2 <- theta_params[3:(2 + length(Z))] }
       # --------------------------------- Get parameters
       # Calculate --------------------------------------
-      muY <- beta0 + beta1 * uncens_data[, X]
+      muY <- beta0 + beta1 * x
       if (length(Z) > 0) {
-        muY <- muY + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = beta2, ncol = 1))
+        muY <- muY + as.numeric(data.matrix(Zi) %*% matrix(data = beta2, ncol = 1))
       }
-      eY <- uncens_data[, Y] - muY
-      pYgivXZ <- exp(- (1 - uncens_data[, Y]) * muY) / (1 + exp(- muY))
+      muY <- data.matrix(muY)
+      pYgivXZ <- exp(- (1 - rep(as.numeric(Yi), length(x))) * muY) / (1 + exp(- muY))
       # -------------------------------------- Calculate
     }
     ####################################################
     # Predictor model P(X|Z) ###########################
     ####################################################
     if (distX == "normal") {
+      # Get parameters ---------------------------------
+      eta_params <- params[-c(1:length(theta_params))]
+      eta0 <- eta_params[1]
+      if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
+      sigX <- eta_params[(1 + length(Z)) + 1]
+      # --------------------------------- Get parameters
+      # Calculate --------------------------------------
       # Calculate ----------------------------------------
       muX <- eta0
       if (length(Z) > 0) {
@@ -150,7 +157,14 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
       }
       eX <- x - muX
       pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
+      # -------------------------------------- Calculate
     } else if (distX == "log-normal") {
+      # Get parameters ---------------------------------
+      eta_params <- params[-c(1:length(theta_params))]
+      eta0 <- eta_params[1]
+      if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
+      sigX <- eta_params[(1 + length(Z)) + 1]
+      # --------------------------------- Get parameters
       # Calculate ----------------------------------------
       muX <- eta0
       if (length(Z) > 0) {
@@ -158,6 +172,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
       }
       eX <- log(x) - muX
       pXgivZ <- 1 / (x * sqrt(2 * pi * sigX ^ 2)) * exp(- eX ^ 2 / (2 * sigX ^ 2))
+      # -------------------------------------- Calculate
     }
     return(pYgivXZ * pXgivZ)
   }
