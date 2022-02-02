@@ -97,6 +97,19 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     eX <- log(uncens_data[, X]) - muX
     pXgivZ <- 1 / (uncens_data[, X] * sqrt(2 * pi * sigX ^ 2)) * exp(- eX ^ 2 / (2 * sigX ^ 2))
     # -------------------------------------- Calculate
+  } else if (distX == "exponential") {
+    # Get parameters ---------------------------------
+    eta_params <- params[-c(1:length(theta_params))]
+    eta0 <- eta_params[1]
+    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
+    # --------------------------------- Get parameters
+    # Calculate --------------------------------------
+    lambdaX <- eta0
+    if (length(Z) > 0) {
+      lambdaX <- lambdaX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
+    }
+    pXgivZ <- lambdaX * exp(- lambdaX * uncens_data[, X])
+    # -------------------------------------- Calculate
   }
   ####################################################
   # Calculate joint density P(Y,X,Z) #################
@@ -172,6 +185,19 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
       }
       eX <- log(x) - muX
       pXgivZ <- 1 / (x * sqrt(2 * pi * sigX ^ 2)) * exp(- eX ^ 2 / (2 * sigX ^ 2))
+      # -------------------------------------- Calculate
+    } else if (distX == "exponential") {
+      # Get parameters ---------------------------------
+      eta_params <- params[-c(1:length(theta_params))]
+      eta0 <- eta_params[1]
+      if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
+      # --------------------------------- Get parameters
+      # Calculate --------------------------------------
+      lambdaX <- eta0
+      if (length(Z) > 0) {
+        lambdaX <- lambdaX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
+      }
+      pXgivZ <- lambdaX * exp(- lambdaX * x)
       # -------------------------------------- Calculate
     }
     return(pYgivXZ * pXgivZ)
