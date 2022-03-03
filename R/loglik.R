@@ -82,6 +82,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     }
     if (any(rateX <= 0)) { return (99999) }
   }
+  pXgivZ <- pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
   
   ####################################################
   # Calculate joint density P(Y,X,Z) #################
@@ -103,60 +104,8 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     ####################################################
     # Predictor model P(X|Z) ###########################
     ####################################################
-    if (distX == "normal") {
-      # Calculate --------------------------------------
-      muX <- eta0
-      if (length(Z) > 0) {
-        muX <- muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
-      }
-      eX <- x - muX
-      pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
-      # -------------------------------------- Calculate
-    } else if (distX == "log-normal") {
-      # Calculate --------------------------------------
-      muX <- eta0
-      if (length(Z) > 0) {
-        muX <- muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
-      }
-      pXgivZ <- (1 / (x * sigX * sqrt(2 * pi))) * exp(-1 * (log(x) - muX)^2 / (2 * sigX^2))
-      # -------------------------------------- Calculate
-    } else if (distX == "gamma") {
-      # Calculate --------------------------------------
-      muX <- eta0
-      if (length(Z) > 0) {
-        muX <- exp(muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1)))
-      }
-      pXgivZ <- (1 / gamma(shapeX)) * ((shapeX / muX) ^ shapeX) * ((x)^(shapeX - 1)) * exp(-1 * shapeX * x / muX)
-      # -------------------------------------- Calculate
-    } else if (distX == "inverse-gaussian") {
-      # Calculate --------------------------------------
-      muX <- eta0
-      if (length(Z) > 0) {
-        muX <- exp(muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1)))
-      }
-      pXgivZ <- sqrt((shapeX / (2 * pi * x^3))) * exp(-1 * (shapeX * (x - muX)^2) / (2 * muX^2 * x))
-      # -------------------------------------- Calculate
-    } else if (distX == "weibull") {
-      # Calculate --------------------------------------
-      shapex <- eta0
-      pXgivZ <- (shapex / scalex) * ((x / scalex) ^ (shapex - 1)) * exp(-1 * (x / scalex)^ shapex)
-      # -------------------------------------- Calculate
-    } else if (distX == "exponential") {
-      # Calculate --------------------------------------
-      lambdaX <- eta0
-      if (length(Z) > 0) {
-        lambdaX <- lambdaX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
-      }
-      pXgivZ <- lambdaX * exp(- lambdaX * x)
-      # -------------------------------------- Calculate
-    } else if (distX == "poisson") {
-      muX <- eta0
-      if (length(Z) > 0) {
-        muX <- muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
-      }
-      pXgivZ <- ((muX^x) * (exp(-1 * muX))) / factorial(x)
-      # -------------------------------------- Calculate
-    }
+    pXgivZ <- pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
+
     ####################################################
     # Joint density P(Y,X,Z) ###########################
     ####################################################
