@@ -41,7 +41,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     theta_params <- params[1:(2 + length(Z))]
     # ------------------------------ Subset parameters
   }
-  pYgivXZ <- pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
+  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
   
   ####################################################
   # Predictor model P(X|Z) ###########################
@@ -82,12 +82,15 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     }
     if (any(rateX <= 0)) { return (99999) }
   }
-  pXgivZ <- pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
+  pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
   
   ####################################################
   # Calculate joint density P(Y,X,Z) #################
   ####################################################
-  uncens_data <- data.frame(cbind(uncens_data, jointP = pYgivXZ * pXgivZ))
+  uncens_data <- cbind(uncens_data, jointP = 1)
+  uncens_data[, "jointP"] <- pYgivXZ * pXgivZ
+  #uncens_data <- data.frame(cbind(uncens_data, jointP = pYgivXZ * pXgivZ))
+  
   ####################################################
   # Calculate the log-likelihood #####################
   ####################################################
@@ -99,12 +102,12 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     ####################################################
     # Analysis model P(Y|X,Z) ##########################
     ####################################################
-    pYgivXZ <- pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, theta_params = theta_params)
+    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, theta_params = theta_params)
 
     ####################################################
     # Predictor model P(X|Z) ###########################
     ####################################################
-    pXgivZ <- pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
+    pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
 
     ####################################################
     # Joint density P(Y,X,Z) ###########################
