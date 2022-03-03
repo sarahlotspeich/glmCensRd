@@ -127,12 +127,15 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
   } else if (distX == "weibull") {
     # Get parameters ---------------------------------
     eta_params <- params[-c(1:length(theta_params))]
+    shapex <- eta_params[1]; eta_params <- eta_params[-1]
     eta0 <- eta_params[1]
     if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-    scalex <- eta_params[(1 + length(Z))]
+    scalex <- eta0
+    if (length(Z) > 0) {
+      scalex <- scalex + data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
+    }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    shapex <- eta0
     pXgivZ <- (shapex / scalex) * ((uncens_data[, X] / scalex) ^ (shapex - 1)) * exp(-1 * (uncens_data[, X] / scalex)^ shapex)
     # -------------------------------------- Calculate
   } else if (distX == "exponential") {
