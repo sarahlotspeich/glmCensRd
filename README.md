@@ -32,6 +32,8 @@ fit <- glmCensRd::glmCensRd(params0 = init_params,
                             Y = "y", X = "x", W = "w", D = "d", Z = "z", 
                             distY = "normal", distX = "normal", data = temp)
 
+# Inspect output
+## Analysis model P(Y|X,Z)
 fit$modY
 $distY
 [1] "normal"
@@ -45,6 +47,7 @@ z           0.2507936 NA
 $sigma2
 [1] 1.042889
 
+## Predictor model P(X|Z)
 fit$modX
 $distX
 [1] "normal"
@@ -60,6 +63,7 @@ $shape
 $sigma2
 [1] 1.046869
 
+## Convergence code
 fit$code
 [1] 2
 ```
