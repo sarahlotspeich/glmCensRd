@@ -46,49 +46,14 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
-  if (distX == "normal") {
-    # Get parameters ---------------------------------
-    eta_params <- params[-c(1:length(theta_params))]
-    eta0 <- eta_params[1]
-    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-    sigX <- eta_params[(1 + length(Z)) + 1]
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    muX <- eta0
-    if (length(Z) > 0) {
-      muX <- muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
-    }
-    eX <- uncens_data[, X] - muX
-    pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
-    # -------------------------------------- Calculate
-  } else if (distX == "log-normal") {
-    # Get parameters ---------------------------------
-    eta_params <- params[-c(1:length(theta_params))]
-    eta0 <- eta_params[1]
-    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-    sigX <- eta_params[(1 + length(Z)) + 1]
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    muX <- eta0
-    if (length(Z) > 0) {
-      muX <- muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
-    }
-    pXgivZ <- (1 / (uncens_data[, X] * sigX * sqrt(2 * pi))) * exp(-1 * (log(uncens_data[, X]) - muX)^2 / (2 * sigX^2))
-    # -------------------------------------- Calculate
-  } else if (distX == "gamma") {
-    # Get parameters ---------------------------------
-    eta_params <- params[-c(1:length(theta_params))]
-    eta0 <- eta_params[1]
-    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-    shapeX <- exp(eta_params[(1 + length(Z)) + 1])
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    muX <- eta0
-    if (length(Z) > 0) {
-      muX <- exp(muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1)))
-    }
-    pXgivZ <- (1 / gamma(shapeX)) * ((shapeX / muX) ^ shapeX) * ((uncens_data[, X])^(shapeX - 1)) * exp(-1 * shapeX * uncens_data[, X] / muX)
-    # -------------------------------------- Calculate
+  # Subset parameters --------------------------------
+  eta_params <- params[-c(1:length(theta_params))]
+  # -------------------------------- Subset parameters
+  # Check for parameters outside domain --------------
+  if (distX == "gamma") {
+    # Shape of Gamma > 0 -----------------------------
+    if (eta_params[1] <= 0) { return (99999) }
+    # ----------------------------- Shape of Gamma > 0
   } else if (distX == "inverse-gaussian") {
     # Get parameters ---------------------------------
     eta_params <- params[-c(1:length(theta_params))]
