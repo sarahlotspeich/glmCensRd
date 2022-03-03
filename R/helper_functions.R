@@ -65,13 +65,6 @@ pXgivZ <- function(x, z = NULL, distX, eta_params) {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
     shapeX <- eta_params[1]
-    #eta0 <- eta_params[1]
-    #if (!is.null(z)) { eta1 <- eta_params[2:(1 + length(z))] }
-    #shapeX <- eta0
-    #if (length(z) > 0) {
-    #  shapeX <- shapeX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-    #}
-    #eta_params <- eta_params[-c(1:(1 + length(z)))]
     ## Construct mean --------------------------------
     eta0 <- eta_params[2]
     if (!is.null(z)) { eta1 <- eta_params[3:(2 + length(z))] }
