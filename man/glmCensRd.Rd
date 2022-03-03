@@ -15,7 +15,7 @@ glmCensRd(
   distY = "normal",
   distX = "normal",
   data,
-  steptol = 1e-06,
+  steptol = 1e-04,
   iterlim = 100
 )
 }
@@ -40,7 +40,7 @@ glmCensRd(
 
 \item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 
-\item{steptol}{(Fed to \code{nlm()}) A positive scalar providing the minimum allowable relative step length. Default is \code{1e-6}.}
+\item{steptol}{(Fed to \code{nlm()}) A positive scalar providing the minimum allowable relative step length. Default is \code{1e-4}.}
 
 \item{iterlim}{(Fed to \code{nlm()}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.}
 }
