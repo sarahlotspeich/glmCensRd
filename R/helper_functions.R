@@ -29,7 +29,6 @@ pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
         meanY <- meanY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
       }
     }
-    meanY <- data.matrix(meanY)
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
     pYgivXZ <- exp(- (1 - y) * meanY) / (1 + exp(meanY))
@@ -46,9 +45,9 @@ pXgivZ <- function(x, z = NULL, distX, eta_params) {
     if (!is.null(z) > 0) {
       eta1 <- eta_params[-c(1:2, length(eta_params))]
       if (length(eta1) == 1) {
-        meanY <- meanY + eta1 * z
+        meanX <- meanX + eta1 * z
       } else {
-        meanY <- meanY + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
+        meanX <- meanX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
       }
     }
     ## Estimate sqrt(variance) directly --------------
