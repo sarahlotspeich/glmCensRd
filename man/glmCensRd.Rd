@@ -45,8 +45,9 @@ glmCensRd(
 \item{iterlim}{(Fed to \code{nlm()}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.}
 }
 \value{
-A list with the following two elements:
-\item{coeff}{A dataframe containing coefficient and standard error estimates at convergence.}
+A list with the following elements:
+\item{modY}{A list containing details of the fitted model for the outcome, \code{Y}, given \code{X} and \code{Z}.}
+\item{modX}{A list containing details of the fitted model for the predictor, \code{X}, given \code{Z}.}
 \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 }
 \description{

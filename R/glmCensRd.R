@@ -13,8 +13,9 @@
 #' @param steptol (Fed to \code{nlm()}) A positive scalar providing the minimum allowable relative step length. Default is \code{1e-6}.
 #' @param iterlim (Fed to \code{nlm()}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
 #'
-#' @return A list with the following two elements:
-#' \item{coeff}{A dataframe containing coefficient and standard error estimates at convergence.}
+#' @return A list with the following elements:
+#' \item{modY}{A list containing details of the fitted model for the outcome, \code{Y}, given \code{X} and \code{Z}.}
+#' \item{modX}{A list containing details of the fitted model for the predictor, \code{X}, given \code{Z}.}
 #' \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 #'
 #' @export
@@ -24,10 +25,76 @@ glmCensRd <- function(params0, Y, X, W, D, Z = NULL, partX = 50, distY = "normal
     mod <- nlm(f = loglik, p = params0, steptol = steptol, iterlim = iterlim, hessian = TRUE,
                Y = Y, X = X, D = D, W = W, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
   )
-  #return(mod)
   param_est <- mod$estimate
   param_se <- sqrt(diag(solve(mod$hessian)))
-  param_df <- data.frame(est = param_est, se = param_se)
-  rownames(param_df) <- c(paste0("beta", 0:length(c(X, Z))), "sigmaY", paste0("eta", 0:length(c(X, Z))), "sigmaX")
-  return(list(coeff = param_df, code = mod$code))
+  
+  ####################################################
+  # Analysis model P(Y|X,Z) ##########################
+  ####################################################
+  if (distY == "normal") {
+    modY_est <- param_est[1:(length(c(X, Z)) + 1)]
+    modY_se <- param_se[1:(length(c(X, Z)) + 1)]
+    modY_sigma2 <- param_se[(length(c(X, Z)) + 1) + 1] ^ 2
+    modY_coeff <- data.frame(coeff = modY_est, se = modY_se)
+    rownames(modY_coeff) <- c("(Intercept)", X, Z)
+    modY <- list(distY = distY, coeff = modY_coeff, sigma2 = modY_sigma2)
+    param_est <- param_est[-c(1:(length(c(X, Z)) + 2))]
+    param_se <- param_se[-c(1:(length(c(X, Z)) + 2))]
+  } else if (distY == "binomial") {
+    modY_coeff <- param_est[1:(length(c(X, Z)) + 1)]
+    modY_se <- param_se[1:(length(c(X, Z)) + 1)]
+    modY_coeff <- data.frame(coeff = modY_est, se = modY_se)
+    rownames(modY_coeff) <- c("(Intercept)", X, Z)
+    modY <- list(distY = distY, coeff = modY_coeff, sigma2 = NA)
+    param_est <- param_est[-c(1:(length(c(X, Z)) + 1))]
+    param_se <- param_se[-c(1:(length(c(X, Z)) + 1))]
+  }
+  
+  ####################################################
+  # Predictor model P(X|Z) ###########################
+  ####################################################
+  if (distX %in% c("normal", "log-normal")) {
+    modX_est <- param_est[1:(length(Z) + 1)]
+    modX_se <- param_se[1:(length(Z) + 1)]
+    modX_sigma2 <- param_se[(length(Z) + 1) + 1] ^ 2
+    modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
+    rownames(modX_coeff) <- c("(Intercept)", Z)
+    modX <- list(distX = distX, coeff = modX_coeff, shape = NA, sigma2 = modX_sigma2)
+  } else if (distX %in% c("gamma", "inverse-gaussian")) {
+    modX_shape_est <- param_est[1:(length(Z) + 1)]
+    modX_shape_se <- param_se[1:(length(Z) + 1)]
+    modX_shape <- data.frame(coeff = modX_shape_est, se = modX_shape_se)
+    param_est <- param_est[-c((length(Z) + 1))]
+    param_se <- param_se[-c((length(Z) + 1))]
+    
+    modX_est <- param_est[1:(length(Z) + 1)]
+    modX_se <- param_se[1:(length(Z) + 1)]
+    modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
+    
+    rownames(modX_coeff) <- rownames(modX_shape) <- c("(Intercept)", Z)
+    
+    modX <- list(distX = distX, coeff = modX_coeff, shape = modX_shape, sigma2 = NA)
+  } else if (distX == "weibull") {
+    modX_est <- param_est[1:(length(Z) + 1)]
+    modX_se <- param_se[1:(length(Z) + 1)]
+    modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
+    rownames(modX_coeff) <- rownames(modX_shape) <- c("(Intercept)", Z)
+    param_est <- param_est[-c((length(Z) + 1))]
+    param_se <- param_se[-c((length(Z) + 1))]
+    
+    modX_shape <- param_est[1]
+    modX_shape_se <- param_se[1]
+    modX_shape <- data.frame(coeff = modX_shape_est, se = modX_shape_se)
+    rownames(modX_shape) <- c("(Intercept)")
+    
+    modX <- list(distX = distX, coeff = modX_coeff, shape = modX_shape, sigma2 = NA)
+  } else if (distX %in% c("exponential", "poisson")) {
+    modX_est <- param_est[1:(length(Z) + 1)]
+    modX_se <- param_se[1:(length(Z) + 1)]
+    modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
+    rownames(modX_coeff) <- c("(Intercept)", Z)
+    modX <- list(distX = distX, coeff = modX_coeff, shape = NA, sigma2 = NA)
+  } 
+  
+  return(list(modY = modY, modX = modX, code = mod$code))
 }
