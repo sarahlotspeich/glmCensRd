@@ -1,4 +1,4 @@
-pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
+calc_pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
   if (distY == "normal") {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
@@ -37,13 +37,13 @@ pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
   return(pYgivXZ)
 }
 
-pXgivZ <- function(x, z = NULL, distX, eta_params) {
+calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
   if (distX == "normal") {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
     meanX <- eta_params[1]
-    if (!is.null(z) > 0) {
-      eta1 <- eta_params[-c(1:2, length(eta_params))]
+    if (!is.null(z)) {
+      eta1 <- eta_params[-c(1, length(eta_params))]
       if (length(eta1) == 1) {
         meanX <- meanX + eta1 * z
       } else {
@@ -61,8 +61,8 @@ pXgivZ <- function(x, z = NULL, distX, eta_params) {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
     meanX <- eta_params[1]
-    if (!is.null(z) > 0) {
-      eta1 <- eta_params[-c(1:2, length(eta_params))]
+    if (!is.null(z)) {
+      eta1 <- eta_params[-c(1, length(eta_params))]
       if (length(eta1) == 1) {
         meanX <- meanX + eta1 * z
       } else {
