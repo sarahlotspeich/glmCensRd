@@ -94,8 +94,46 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     if (length(Z) > 0) {
       muX <- muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
     }
-    eX <- log(uncens_data[, X]) - muX
-    pXgivZ <- 1 / (uncens_data[, X] * sqrt(2 * pi * sigX ^ 2)) * exp(- eX ^ 2 / (2 * sigX ^ 2))
+    pXgivZ <- (1 / (uncens_data[, X] * sigX * sqrt(2 * pi))) * exp(-1 * (log(uncens_data[, X]) - muX)^2 / (2 * sigX^2))
+    # -------------------------------------- Calculate
+  } else if (distX == "gamma") {
+    # Get parameters ---------------------------------
+    eta_params <- params[-c(1:length(theta_params))]
+    eta0 <- eta_params[1]
+    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
+    shapeX <- exp(eta_params[(1 + length(Z)) + 1])
+    # --------------------------------- Get parameters
+    # Calculate --------------------------------------
+    muX <- eta0
+    if (length(Z) > 0) {
+      muX <- exp(muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1)))
+    }
+    pXgivZ <- (1 / gamma(shapeX)) * ((shapeX / muX) ^ shapeX) * ((uncens_data[, X])^(shapeX - 1)) * exp(-1 * shapeX * uncens_data[, X] / muX)
+    # -------------------------------------- Calculate
+  } else if (distX == "inverse-gaussian") {
+    # Get parameters ---------------------------------
+    eta_params <- params[-c(1:length(theta_params))]
+    eta0 <- eta_params[1]
+    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
+    shapeX <- exp(eta_params[(1 + length(Z)) + 1])
+    # --------------------------------- Get parameters
+    # Calculate --------------------------------------
+    muX <- eta0
+    if (length(Z) > 0) {
+      muX <- exp(muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1)))
+    }
+    pXgivZ <- sqrt((shapeX / (2 * pi * uncens_data[, X]^3))) * exp(-1 * (shapeX * (uncens_data[, X] - muX)^2) / (2 * muX^2 * uncens_data[, X]))
+    # -------------------------------------- Calculate
+  } else if (distX == "weibull") {
+    # Get parameters ---------------------------------
+    eta_params <- params[-c(1:length(theta_params))]
+    eta0 <- eta_params[1]
+    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
+    scalex <- eta_params[(1 + length(Z))]
+    # --------------------------------- Get parameters
+    # Calculate --------------------------------------
+    shapex <- eta0
+    pXgivZ <- (shapex / scalex) * ((uncens_data[, X] / scalex) ^ (shapex - 1)) * exp(-1 * (uncens_data[, X] / scalex)^ shapex)
     # -------------------------------------- Calculate
   } else if (distX == "exponential") {
     # Get parameters ---------------------------------
@@ -110,7 +148,20 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     }
     pXgivZ <- lambdaX * exp(- lambdaX * uncens_data[, X])
     # -------------------------------------- Calculate
+  } else if (distX == "poisson") {
+    # Get parameters ---------------------------------
+    eta_params <- params[-c(1:length(theta_params))]
+    eta0 <- eta_params[1]
+    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
+    # --------------------------------- Get parameters
+    muX <- eta0
+    if (length(Z) > 0) {
+      muX <- muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
+    }
+    pXgivZ <- ((muX^uncens_data[, X]) * (exp(-1 * muX))) / factorial(uncens_data[, X])
+    # -------------------------------------- Calculate
   }
+  
   ####################################################
   # Calculate joint density P(Y,X,Z) #################
   ####################################################
@@ -127,7 +178,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     # Analysis model P(Y|X,Z) ##########################
     ####################################################
     if (distY == "normal") {
-      # Calculate ----------------------------------------
+      # Calculate --------------------------------------
       muY <- beta0 + beta1 * matrix(data = x, ncol = 1)
       if (length(Z) > 0) {
         muY <- muY + as.numeric(data.matrix(Zi) %*% matrix(data = beta2, ncol = 1))
@@ -135,35 +186,22 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
       muY <- data.matrix(muY)
       eY <- as.numeric(Yi) - muY
       pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
-      # ---------------------------------------- Calculate
+      # -------------------------------------- Calculate
     } else if (distY == "binomial") {
-      # Get parameters ---------------------------------
-      theta_params <- params[1:(2 + length(Z))]
-      beta0 <- theta_params[1]
-      beta1 <- theta_params[2]
-      if (!is.null(Z)) { beta2 <- theta_params[3:(2 + length(Z))] }
-      # --------------------------------- Get parameters
       # Calculate --------------------------------------
-      muY <- beta0 + beta1 * x
+      muY <- beta0 + beta1 * matrix(data = x, ncol = 1)
       if (length(Z) > 0) {
         muY <- muY + as.numeric(data.matrix(Zi) %*% matrix(data = beta2, ncol = 1))
       }
       muY <- data.matrix(muY)
-      pYgivXZ <- exp(- (1 - rep(as.numeric(Yi), length(x))) * muY) / (1 + exp(- muY))
+      pYgivXZ <- exp(- (1 - Yi) * muY) / (1 + exp(- muY))
       # -------------------------------------- Calculate
     }
     ####################################################
     # Predictor model P(X|Z) ###########################
     ####################################################
     if (distX == "normal") {
-      # Get parameters ---------------------------------
-      eta_params <- params[-c(1:length(theta_params))]
-      eta0 <- eta_params[1]
-      if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-      sigX <- eta_params[(1 + length(Z)) + 1]
-      # --------------------------------- Get parameters
       # Calculate --------------------------------------
-      # Calculate ----------------------------------------
       muX <- eta0
       if (length(Z) > 0) {
         muX <- muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
@@ -172,26 +210,35 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
       pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
       # -------------------------------------- Calculate
     } else if (distX == "log-normal") {
-      # Get parameters ---------------------------------
-      eta_params <- params[-c(1:length(theta_params))]
-      eta0 <- eta_params[1]
-      if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-      sigX <- eta_params[(1 + length(Z)) + 1]
-      # --------------------------------- Get parameters
-      # Calculate ----------------------------------------
+      # Calculate --------------------------------------
       muX <- eta0
       if (length(Z) > 0) {
         muX <- muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
       }
-      eX <- log(x) - muX
-      pXgivZ <- 1 / (x * sqrt(2 * pi * sigX ^ 2)) * exp(- eX ^ 2 / (2 * sigX ^ 2))
+      pXgivZ <- (1 / (x * sigX * sqrt(2 * pi))) * exp(-1 * (log(x) - muX)^2 / (2 * sigX^2))
+      # -------------------------------------- Calculate
+    } else if (distX == "gamma") {
+      # Calculate --------------------------------------
+      muX <- eta0
+      if (length(Z) > 0) {
+        muX <- exp(muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1)))
+      }
+      pXgivZ <- (1 / gamma(shapeX)) * ((shapeX / muX) ^ shapeX) * ((x)^(shapeX - 1)) * exp(-1 * shapeX * x / muX)
+      # -------------------------------------- Calculate
+    } else if (distX == "inverse-gaussian") {
+      # Calculate --------------------------------------
+      muX <- eta0
+      if (length(Z) > 0) {
+        muX <- exp(muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1)))
+      }
+      pXgivZ <- sqrt((shapeX / (2 * pi * x^3))) * exp(-1 * (shapeX * (x - muX)^2) / (2 * muX^2 * x))
+      # -------------------------------------- Calculate
+    } else if (distX == "weibull") {
+      # Calculate --------------------------------------
+      shapex <- eta0
+      pXgivZ <- (shapex / scalex) * ((x / scalex) ^ (shapex - 1)) * exp(-1 * (x / scalex)^ shapex)
       # -------------------------------------- Calculate
     } else if (distX == "exponential") {
-      # Get parameters ---------------------------------
-      eta_params <- params[-c(1:length(theta_params))]
-      eta0 <- eta_params[1]
-      if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-      # --------------------------------- Get parameters
       # Calculate --------------------------------------
       lambdaX <- eta0
       if (length(Z) > 0) {
@@ -199,7 +246,17 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
       }
       pXgivZ <- lambdaX * exp(- lambdaX * x)
       # -------------------------------------- Calculate
+    } else if (distX == "poisson") {
+      muX <- eta0
+      if (length(Z) > 0) {
+        muX <- muX + as.numeric(data.matrix(Zi) %*% matrix(data = eta1, ncol = 1))
+      }
+      pXgivZ <- ((muX^x) * (exp(-1 * muX))) / factorial(x)
+      # -------------------------------------- Calculate
     }
+    ####################################################
+    # Joint density P(Y,X,Z) ###########################
+    ####################################################
     return(pYgivXZ * pXgivZ)
   }
   integrate_joint_dens <- function(data_row) {
@@ -215,7 +272,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
   log_integral[log_integral == -Inf] <- 0
   ll <- ll + sum(log_integral)
   # -------- Log-likelihood contribution of censored X
-  # Return - 1 x log-likelihood for use with nlm() ---
+  # Return (-1) x log-likelihood for use with nlm() --
   return(- ll)
-  # --- Return - 1 x log-likelihood for use with nlm()
+  # -- Return (-1) x log-likelihood for use with nlm()
 }
