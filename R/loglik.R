@@ -33,37 +33,16 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
   # Analysis model P(Y|X,Z) ##########################
   ####################################################
   if (distY == "normal") {
-    # Get parameters ---------------------------------
+    # Subset parameters ------------------------------
     theta_params <- params[1:(3 + length(Z))]
-    beta0 <- theta_params[1]
-    beta1 <- theta_params[2]
-    if (!is.null(Z)) { beta2 <- theta_params[3:(2 + length(Z))] }
-    sigY <- theta_params[(2 + length(Z)) + 1]
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    muY <- beta0 + beta1 * uncens_data[, X]
-    if (length(Z) > 0) {
-      muY <- muY + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = beta2, ncol = 1))
-    }
-    eY <- uncens_data[, Y] - muY
-    pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
-    # -------------------------------------- Calculate
+    # ------------------------------ Subset parameters
   } else if (distY == "binomial") {
-    # Get parameters ---------------------------------
+    # Subset parameters ------------------------------
     theta_params <- params[1:(2 + length(Z))]
-    beta0 <- theta_params[1]
-    beta1 <- theta_params[2]
-    if (!is.null(Z)) { beta2 <- theta_params[3:(2 + length(Z))] }
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    muY <- beta0 + beta1 * uncens_data[, X]
-    if (length(Z) > 0) {
-      muY <- muY + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = beta2, ncol = 1))
-    }
-    eY <- uncens_data[, Y] - muY
-    pYgivXZ <- exp(- (1 - uncens_data[, Y]) * muY) / (1 + exp(- muY))
-    # -------------------------------------- Calculate
+    # ------------------------------ Subset parameters
   }
+  pYgivXZ <- pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
+  
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
@@ -132,7 +111,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
     scalex <- eta0
     if (length(Z) > 0) {
-      scalex <- scalex + data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
+      scalex <- scalex + data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1)
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
