@@ -159,26 +159,8 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     ####################################################
     # Analysis model P(Y|X,Z) ##########################
     ####################################################
-    if (distY == "normal") {
-      # Calculate --------------------------------------
-      muY <- beta0 + beta1 * matrix(data = x, ncol = 1)
-      if (length(Z) > 0) {
-        muY <- muY + as.numeric(data.matrix(Zi) %*% matrix(data = beta2, ncol = 1))
-      }
-      muY <- data.matrix(muY)
-      eY <- as.numeric(Yi) - muY
-      pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
-      # -------------------------------------- Calculate
-    } else if (distY == "binomial") {
-      # Calculate --------------------------------------
-      muY <- beta0 + beta1 * matrix(data = x, ncol = 1)
-      if (length(Z) > 0) {
-        muY <- muY + as.numeric(data.matrix(Zi) %*% matrix(data = beta2, ncol = 1))
-      }
-      muY <- data.matrix(muY)
-      pYgivXZ <- exp(- (1 - Yi) * muY) / (1 + exp(- muY))
-      # -------------------------------------- Calculate
-    }
+    pYgivXZ <- pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, theta_params = theta_params)
+
     ####################################################
     # Predictor model P(X|Z) ###########################
     ####################################################
