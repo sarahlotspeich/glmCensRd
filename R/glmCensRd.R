@@ -24,10 +24,10 @@ glmCensRd <- function(params0, Y, X, W, D, Z = NULL, partX = 50, distY = "normal
     mod <- nlm(f = loglik, p = params0, steptol = steptol, iterlim = iterlim, hessian = TRUE,
                Y = Y, X = X, D = D, W = W, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
   )
-  return(mod)
-  # param_est <- mod$estimate
-  # param_se <- sqrt(diag(solve(mod$hessian)))
-  # param_df <- data.frame(est = param_est, se = param_se)
-  # rownames(param_df) <- c(paste0("beta", 0:length(c(X, Z))), "sigmaY", paste0("eta", 0:length(c(X, Z))), "sigmaX")
-  # return(list(coeff = param_df, code = mod$code))
+  #return(mod)
+  param_est <- mod$estimate
+  param_se <- sqrt(diag(solve(mod$hessian)))
+  param_df <- data.frame(est = param_est, se = param_se)
+  rownames(param_df) <- c(paste0("beta", 0:length(c(X, Z))), "sigmaY", paste0("eta", 0:length(c(X, Z))), "sigmaX")
+  return(list(coeff = param_df, code = mod$code))
 }
