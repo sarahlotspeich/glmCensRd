@@ -55,58 +55,32 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     if (eta_params[1] <= 0) { return (99999) }
     # ----------------------------- Shape of Gamma > 0
   } else if (distX == "inverse-gaussian") {
-    # Get parameters ---------------------------------
-    eta_params <- params[-c(1:length(theta_params))]
-    eta0 <- eta_params[1]
-    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-    shapeX <- exp(eta_params[(1 + length(Z)) + 1])
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    muX <- eta0
-    if (length(Z) > 0) {
-      muX <- exp(muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1)))
+    # Shape and mean of inverse-Gaussian both > 0 ----
+    # Estimate shape directly ------------------------
+    shapeX <- eta_params[1]
+    meanX <- eta_params[2]
+    if (length(z) > 0) {
+      meanX <- meanX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta_params[3:(2 + length(Z))], ncol = 1))
     }
-    pXgivZ <- sqrt((shapeX / (2 * pi * uncens_data[, X]^3))) * exp(-1 * (shapeX * (uncens_data[, X] - muX)^2) / (2 * muX^2 * uncens_data[, X]))
-    # -------------------------------------- Calculate
+    if (any(c(shapeX, meanX) <= 0)) { return(99999)}
+    # --------------------------------- Get parameters
   } else if (distX == "weibull") {
-    # Get parameters ---------------------------------
-    eta_params <- params[-c(1:length(theta_params))]
-    shapex <- eta_params[1]; eta_params <- eta_params[-1]
-    eta0 <- eta_params[1]
-    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-    scalex <- eta0
+    # Shape and scale of Weibull both > 0 ------------
+    shapeX <- eta_params[1]
+    scaleX <- eta_params[2]
     if (length(Z) > 0) {
-      scalex <- scalex + data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1)
+      eta1 <- eta_params[3:(2 + length(Z))]
+      scaleX <- scaleX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
     }
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    pXgivZ <- (shapex / scalex) * ((uncens_data[, X] / scalex) ^ (shapex - 1)) * exp(-1 * (uncens_data[, X] / scalex)^ shapex)
-    # -------------------------------------- Calculate
+    if (any(c(shapeX, scaleX) <= 0)) { return(99999)}
   } else if (distX == "exponential") {
-    # Get parameters ---------------------------------
-    eta_params <- params[-c(1:length(theta_params))]
-    eta0 <- eta_params[1]
-    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    lambdaX <- eta0
+    # Rate of Exponential or Poisson > 0 -------------
+    rateX <- eta_params[1]
     if (length(Z) > 0) {
-      lambdaX <- lambdaX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
+      eta1 <- eta_params[2:(1 + length(z))]
+      rateX <- rateX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
     }
-    pXgivZ <- lambdaX * exp(- lambdaX * uncens_data[, X])
-    # -------------------------------------- Calculate
-  } else if (distX == "poisson") {
-    # Get parameters ---------------------------------
-    eta_params <- params[-c(1:length(theta_params))]
-    eta0 <- eta_params[1]
-    if (!is.null(Z)) { eta1 <- eta_params[2:(1 + length(Z))] }
-    # --------------------------------- Get parameters
-    muX <- eta0
-    if (length(Z) > 0) {
-      muX <- muX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
-    }
-    pXgivZ <- ((muX^uncens_data[, X]) * (exp(-1 * muX))) / factorial(uncens_data[, X])
-    # -------------------------------------- Calculate
+    if (any(rateX <= 0)) { return (99999) }
   }
   
   ####################################################
