@@ -6,7 +6,6 @@
 \usage{
 glmCensRd(
   Y,
-  X,
   W,
   D,
   Z = NULL,
@@ -20,8 +19,6 @@ glmCensRd(
 }
 \arguments{
 \item{Y}{Name of column variable.}
-
-\item{X}{Name of censored covariate variable.}
 
 \item{W}{Name of observed (i.e., censored) version of \code{X}.}
 

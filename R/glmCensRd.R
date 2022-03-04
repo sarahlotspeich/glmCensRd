@@ -1,7 +1,6 @@
 #' Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)
 #'
 #' @param Y Name of column variable.
-#' @param X Name of censored covariate variable.
 #' @param W Name of observed (i.e., censored) version of \code{X}.
 #' @param D Name of event indicator, defined to be = 1 if \code{X} was uncensored.
 #' @param Z (Optional) name(s) of additional fully observed covariates. Default is \code{NULL}
@@ -19,7 +18,15 @@
 #'
 #' @export
 #'
-glmCensRd <- function(Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, steptol = 1e-4, iterlim = 100) {
+glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, steptol = 1e-4, iterlim = 100) {
+  # Subset data to relevant, user-specified columns
+  data <- data[, c(Y, W, D, Z)]
+  # Create variable X = W
+  data <- cbind(data, X = data[, W])
+  ## Make it NA for censored (D = 0)
+  data[data[, D] == 0, "X"] <- NA
+  ## Define column X variable name
+  X <- "X"
 
   if (distY == "normal") {
     params0 <- c(rep(0, length(c(1, X, Z))), var(data[, Y]))
