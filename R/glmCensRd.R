@@ -32,7 +32,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
     params0 <- c(rep(0, length(c(1, X, Z))), var(data[, Y]))
   }
 
-  if (distX == "normal") {
+  if (distX %in% c("normal", "log-normal")) {
     params0 <- c(params0, rep(0, length(c(1, Z))), var(data[, X], na.rm = TRUE))
   }
 
