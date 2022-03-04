@@ -5,7 +5,6 @@
 \title{Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)}
 \usage{
 glmCensRd(
-  params0,
   Y,
   X,
   W,
@@ -20,8 +19,6 @@ glmCensRd(
 )
 }
 \arguments{
-\item{params0}{Starting parameter values.}
-
 \item{Y}{Name of column variable.}
 
 \item{X}{Name of censored covariate variable.}

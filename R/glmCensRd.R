@@ -1,6 +1,5 @@
 #' Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)
 #'
-#' @param params0 Starting parameter values.
 #' @param Y Name of column variable.
 #' @param X Name of censored covariate variable.
 #' @param W Name of observed (i.e., censored) version of \code{X}.
@@ -20,14 +19,23 @@
 #'
 #' @export
 #'
-glmCensRd <- function(params0, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, steptol = 1e-4, iterlim = 100) {
+glmCensRd <- function(Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, steptol = 1e-4, iterlim = 100) {
+
+  if (distY == "normal") {
+    params0 <- c(rep(0, length(c(1, X, Z))), var(data[, Y]))
+  }
+
+  if (distX == "normal") {
+    params0 <- c(params0, rep(0, length(c(1, Z))), var(data[, X], na.rm = TRUE))
+  }
+
   suppressWarnings(
     mod <- nlm(f = loglik, p = params0, steptol = steptol, iterlim = iterlim, hessian = TRUE,
                Y = Y, X = X, D = D, W = W, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
   )
   param_est <- mod$estimate
   #param_se <- sqrt(diag(solve(mod$hessian)))
-  
+
   ####################################################
   # Analysis model P(Y|X,Z) ##########################
   ####################################################
@@ -49,7 +57,7 @@ glmCensRd <- function(params0, Y, X, W, D, Z = NULL, partX = 50, distY = "normal
     param_est <- param_est[-c(1:(length(c(X, Z)) + 1))]
     #param_se <- param_se[-c(1:(length(c(X, Z)) + 1))]
   }
-  
+
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
@@ -66,12 +74,12 @@ glmCensRd <- function(params0, Y, X, W, D, Z = NULL, partX = 50, distY = "normal
     modX_shape <- data.frame(coeff = modX_shape_est, se = modX_shape_se)
     rownames(modX_shape) <- c("(Intercept)")
     param_est <- param_est[-1]
-    
+
     modX_est <- param_est[1:(length(Z) + 1)]
     modX_se <- NA # param_se[1:(length(Z) + 1)]
     modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
-    
+
     modX <- list(distX = distX, mean = modX_coeff, shape = modX_shape)
   } else if (distX == "weibull") {
     modX_shape_est <- param_est[1]
@@ -79,12 +87,12 @@ glmCensRd <- function(params0, Y, X, W, D, Z = NULL, partX = 50, distY = "normal
     modX_shape <- data.frame(coeff = modX_shape_est, se = modX_shape_se)
     rownames(modX_shape) <- c("(Intercept)")
     param_est <- param_est[-1]
-    
+
     modX_est <- param_est[1:(length(Z) + 1)]
     modX_se <- NA # param_se[1:(length(Z) + 1)]
     modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
     rownames(modX_coeff) <- rownames(modX_shape) <- c("(Intercept)", Z)
-    
+
     modX <- list(distX = distX, scale = modX_coeff, shape = modX_shape)
   } else if (distX %in% c("exponential", "poisson")) {
     modX_est <- param_est[1:(length(Z) + 1)]
@@ -92,7 +100,7 @@ glmCensRd <- function(params0, Y, X, W, D, Z = NULL, partX = 50, distY = "normal
     modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
     modX <- list(distX = distX, rate = modX_coeff)
-  } 
-  
+  }
+
   return(list(outcome_model = modY, predictor_model = modX, code = mod$code))
 }
