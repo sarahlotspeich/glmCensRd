@@ -12,8 +12,8 @@
 #' @param iterlim (Fed to \code{nlm()}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
 #'
 #' @return A list with the following elements:
-#' \item{modY}{A list containing details of the fitted model for the outcome, \code{Y}, given \code{X} and \code{Z}.}
-#' \item{modX}{A list containing details of the fitted model for the predictor, \code{X}, given \code{Z}.}
+#' \item{outcome_model}{A list containing details of the fitted model for the outcome.}
+#' \item{predictor_model}{A list containing details of the fitted model for the predictor.}
 #' \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 #'
 #' @export
