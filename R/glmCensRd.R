@@ -34,8 +34,10 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
 
   if (distX %in% c("normal", "log-normal")) {
     params0 <- c(params0, rep(0, length(c(1, Z))), var(data[, X], na.rm = TRUE))
-  } else if (distX %in% c('gamma', "inverse-gaussian", "weibull")) {
+  } else if (distX %in% c('gamma', "inverse-gaussian")) {
     params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
+  } else if (distX == "weibull") {
+    params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
   }
 
   suppressWarnings(
@@ -100,7 +102,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
     modX_est <- param_est[1:(length(Z) + 1)]
     modX_se <- NA # param_se[1:(length(Z) + 1)]
     modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
-    rownames(modX_coeff) <- rownames(modX_shape) <- c("(Intercept)", Z)
+    rownames(modX_coeff) <- c("(Intercept)", Z)
 
     modX <- list(distX = distX, scale = modX_coeff, shape = modX_shape)
   } else if (distX %in% c("exponential", "poisson")) {
