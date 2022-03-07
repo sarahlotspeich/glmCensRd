@@ -38,7 +38,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
     params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
   } else if (distX == "weibull") {
     params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
-  } else if (distX == "exponential") {
+  } else if (distX %in% c("exponential", "poisson")) {
     params0 <- c(params0, rep(0.1, length(c(1, Z))))
   }
 
