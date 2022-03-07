@@ -34,6 +34,8 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
 
   if (distX %in% c("normal", "log-normal")) {
     params0 <- c(params0, rep(0, length(c(1, Z))), var(data[, X], na.rm = TRUE))
+  } else if (distX %in% c('gamma', "inverse-gaussian")) {
+    params0 <- c(params0, 1, rep(0, length(c(1, Z))))
   }
 
   suppressWarnings(
