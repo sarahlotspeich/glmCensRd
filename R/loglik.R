@@ -42,7 +42,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     # ------------------------------ Subset parameters
   }
   pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
-  
+
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
@@ -51,9 +51,15 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
   # -------------------------------- Subset parameters
   # Check for parameters outside domain --------------
   if (distX == "gamma") {
-    # Shape of Gamma > 0 -----------------------------
-    if (eta_params[1] <= 0) { return (99999) }
-    # ----------------------------- Shape of Gamma > 0
+    # Shape and scale of Gamma > 0 -------------------
+    shapeX <- eta_params[1]
+    meanX <- eta_params[2]
+    if (length(z) > 0) {
+      meanX <- meanX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta_params[3:(2 + length(Z))], ncol = 1))
+    }
+    scaleX <- meanX / shapeX
+    if (any(c(shapeX, scaleX) <= 0)) { return(99999)}
+    # ------------------- Shape and scale of Gamma > 0
   } else if (distX == "inverse-gaussian") {
     # Shape and mean of inverse-Gaussian both > 0 ----
     # Estimate shape directly ------------------------
@@ -83,14 +89,14 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     if (any(rateX <= 0)) { return (99999) }
   }
   pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  
+
   ####################################################
   # Calculate joint density P(Y,X,Z) #################
   ####################################################
   uncens_data <- cbind(uncens_data, jointP = 1)
   uncens_data[, "jointP"] <- pYgivXZ * pXgivZ
   #uncens_data <- data.frame(cbind(uncens_data, jointP = pYgivXZ * pXgivZ))
-  
+
   ####################################################
   # Calculate the log-likelihood #####################
   ####################################################
