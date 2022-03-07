@@ -161,7 +161,7 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    pXgivZ <- ((rateX ^ x) * (exp(- rateX))) / factorial(x)
+    pXgivZ <- rateX ^ x * exp(- rateX) / factorial(x)
     # -------------------------------------- Calculate
   }
   return(pXgivZ)
