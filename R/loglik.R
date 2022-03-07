@@ -84,7 +84,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     if (length(Z) > 0) {
       eta1 <- eta_params[2:(1 + length(Z))]
       if (length(eta1) == 1) {
-        rateX <- rateX + eta * uncens_data[, Z]
+        rateX <- rateX + eta1 * uncens_data[, Z]
       } else {
         rateX <- rateX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
       }
