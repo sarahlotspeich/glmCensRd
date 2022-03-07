@@ -54,7 +54,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     # Shape and scale of Gamma > 0 -------------------
     shapeX <- eta_params[1]
     meanX <- eta_params[2]
-    if (length(z) > 0) {
+    if (length(Z) > 0) {
       meanX <- meanX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta_params[3:(2 + length(Z))], ncol = 1))
     }
     scaleX <- meanX / shapeX
@@ -65,7 +65,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     # Estimate shape directly ------------------------
     shapeX <- eta_params[1]
     meanX <- eta_params[2]
-    if (length(z) > 0) {
+    if (length(Z) > 0) {
       meanX <- meanX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta_params[3:(2 + length(Z))], ncol = 1))
     }
     if (any(c(shapeX, meanX) <= 0)) { return(99999)}
@@ -83,7 +83,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     # Rate of Exponential or Poisson > 0 -------------
     rateX <- eta_params[1]
     if (length(Z) > 0) {
-      eta1 <- eta_params[2:(1 + length(z))]
+      eta1 <- eta_params[2:(1 + length(Z))]
       rateX <- rateX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
     }
     if (any(rateX <= 0)) { return (99999) }
