@@ -64,7 +64,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
     param_est <- param_est[-c(1:(length(c(X, Z)) + 2))]
     #param_se <- param_se[-c(1:(length(c(X, Z)) + 2))]
   } else if (distY == "binomial") {
-    modY_coeff <- param_est[1:(length(c(X, Z)) + 1)]
+    modY_est <- param_est[1:(length(c(X, Z)) + 1)]
     modY_se <- NA #param_se[1:(length(c(X, Z)) + 1)]
     modY_coeff <- data.frame(coeff = modY_est, se = modY_se)
     rownames(modY_coeff) <- c("(Intercept)", X, Z)
