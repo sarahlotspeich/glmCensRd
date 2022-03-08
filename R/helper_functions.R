@@ -22,7 +22,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
     ## Construct mean --------------------------------
     meanY <- theta_params[1] + theta_params[2] * matrix(data = x, ncol = 1)
     if (!is.null(z)) {
-      beta2 <- theta_params[-c(1:2, length(theta_params))]
+      beta2 <- theta_params[-c(1:2)]
       if (length(beta2) == 1) {
         meanY <- meanY + z
       } else {
