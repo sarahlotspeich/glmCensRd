@@ -302,7 +302,7 @@ part_deriv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = 
   }
   pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
   d_pYgivXZ <- part_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
-
+  d_loglik_theta <- matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = length(theta_params))
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
