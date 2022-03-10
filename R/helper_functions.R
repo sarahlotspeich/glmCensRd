@@ -242,7 +242,7 @@ part_deriv_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     }
     ## Estimate sqrt(variance) directly --------------
     sigX <- eta_params[length(eta_params)]
-    eX <- x - meanX
+    eX <- data.matrix(x - meanX)
     pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
     # --------------------------------- Get parameters
     # Calculate partial derivatives ------------------
@@ -313,10 +313,14 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
   pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
   d_pXgivZ <- part_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
   d_loglik_eta <- d_pXgivZ / matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = length(eta_params))
+  # Return deriv theta and eta side-by-side ----------
+  d_loglik <- cbind(d_loglik_theta, d_loglik_eta)
+  # ---------- Return deriv theta and eta side-by-side
   ####################################################
   # Derivatives of censored ##########################
   ####################################################
   # Integrate over joint P(Y,X,Z) --------------------
+  dim_params <- length(c(theta_params, eta_params))
   joint_dens <- function(x, Yi, Zi) {
     ####################################################
     # Analysis model P(Y|X,Z) ##########################
@@ -341,10 +345,11 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
                error = function(err) {0})
     )
   }
-  integral <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
+  integral_joint <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
+  integral_joint_wide <- matrix(data = rep(integral_joint, each = dim_params), ncol = dim_params, byrow = TRUE)
   # -------------------- Integrate over joint P(Y,X,Z)
   # Integrate over partial derivative ----------------
-  part_deriv_joint_dens <- function(x, Yi, Zi, col) {
+  part_deriv_joint_dens <- function(x, Yi, Zi, col = NULL) {
     ####################################################
     # Analysis model P(Y|X,Z) ##########################
     ####################################################
@@ -360,11 +365,15 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
     ####################################################
     d_pYXZ <- cbind(d_pYgivXZ * matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = ncol(d_pYgivXZ), byrow = FALSE),
                     matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = ncol(d_pXgivZ), byrow = FALSE) * d_pXgivZ)
-    return(d_pYXZ[, col])
+    if (!is.null(col)) {
+      return(d_pYXZ[, col])
+    } else {
+      return(d_pYXZ)
+    }
   }
   integrate_part_deriv_joint_dens <- function(data_row) {
     data_row <- data.frame(t(data_row))
-    return_mat <- matrix(data = NA, nrow = 1, ncol = c(theta_params, eta_params))
+    return_mat <- matrix(data = NA, nrow = 1, ncol = dim_params)
     for (col in 1:ncol(return_mat)) {
       return_mat[, col] <- tryCatch(expr = integrate(f = part_deriv_joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
                                                      Yi = data_row[Y], Zi = data_row[, Z], col = col)$value,
@@ -372,13 +381,13 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
     }
     return(return_mat)
   }
-
-  integrate_part_deriv_joint_dens(cens_data[1, ])
-
-  integrate_d_loglik <- matrix(data = NA, nrow = nrow(cens_data), ncol = length(c(theta_params, eta_params)))
+  integral_d_loglik <- t(apply(X = cens_data, MARGIN = 1, FUN = integrate_part_deriv_joint_dens))
   # ---------------- Integrate over partial derivative
+  # Divide integral of deriv by integral of P(Y,X,Z) -
+  d_loglik <- rbind(d_loglik, integral_d_loglik / integral_joint_wide)
+  # - Divide integral of deriv by integral of P(Y,X,Z)
   # Return matrix of derivatives ---------------------
-  return(cbind(d_loglik_theta, d_loglik_eta))
+  return(d_loglik)
   # --------------------- Return matrix of derivatives
 }
 
