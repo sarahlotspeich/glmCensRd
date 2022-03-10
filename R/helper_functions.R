@@ -1,10 +1,10 @@
-calc_pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
+calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
   if (distY == "normal") {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
-    meanY <- theta_params[1] + theta_params[2] * matrix(data = x, ncol = 1)
+    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
     if (!is.null(z)) {
-      beta2 <- theta_params[-c(1:2, length(theta_params))]
+      beta2 <- beta_params[-c(1:2, length(beta_params))]
       if (length(beta2) == 1) {
         meanY <- meanY + beta2 * z
       } else {
@@ -12,7 +12,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
       }
     }
     ## Estimate sqrt(variance) directly --------------
-    sigY <- theta_params[length(theta_params)]
+    sigY <- beta_params[length(beta_params)]
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
     eY <- as.numeric(y) - meanY
@@ -21,9 +21,9 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
   } else if (distY == "binomial") {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
-    meanY <- theta_params[1] + theta_params[2] * matrix(data = x, ncol = 1)
+    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
     if (!is.null(z)) {
-      beta2 <- theta_params[-c(1:2)]
+      beta2 <- beta_params[-c(1:2)]
       if (length(beta2) == 1) {
         meanY <- meanY + z
       } else {
@@ -168,13 +168,13 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
   return(pXgivZ)
 }
 
-part_deriv_pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
+part_deriv_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
   if (distY == "normal") {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
-    meanY <- theta_params[1] + theta_params[2] * matrix(data = x, ncol = 1)
+    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
     if (!is.null(z)) {
-      beta2 <- theta_params[-c(1:2, length(theta_params))]
+      beta2 <- beta_params[-c(1:2, length(beta_params))]
       if (length(beta2) == 1) {
         meanY <- meanY + beta2 * z
       } else {
@@ -182,20 +182,20 @@ part_deriv_pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
       }
     }
     ## Estimate sqrt(variance) directly --------------
-    sigY <- theta_params[length(theta_params)]
+    sigY <- beta_params[length(beta_params)]
     # --------------------------------- Get parameters
     # Calculate P(Y|X,Z) -----------------------------
     eY <- as.numeric(y) - meanY
     pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
     # ----------------------------- Calculate P(Y|X,Z)
     # Calculate partial derivatives ------------------
-    all_d <- matrix(data = NA, nrow = nrow(pYgivXZ), ncol = length(theta_params))
+    all_d <- matrix(data = NA, nrow = nrow(pYgivXZ), ncol = length(beta_params))
     all_d[, 1] <- eY / (sigY ^ 2) * pYgivXZ # d/dbeta0
     all_d[, 2] <- x * all_d[, 1] # d/dbeta1
     # d/dbeta2, ..., d/dbetap
     if (!is.null(z)) {
       if (ncol(data.frame(z)) > 1) {
-        for (c in 3:(length(theta_params) - 1)) {
+        for (c in 3:(length(beta_params) - 1)) {
           all_d[, c] <- data.frame(z)[, c] * all_d[, 1]
         }
       } else {
@@ -207,9 +207,9 @@ part_deriv_pYgivXandZ <- function(y, x, z = NULL, distY, theta_params) {
   } else if (distY == "binomial") {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
-    meanY <- theta_params[1] + theta_params[2] * matrix(data = x, ncol = 1)
+    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
     if (!is.null(z)) {
-      beta2 <- theta_params[-c(1:2)]
+      beta2 <- beta_params[-c(1:2)]
       if (length(beta2) == 1) {
         meanY <- meanY + z
       } else {
@@ -296,19 +296,19 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
   # Analysis model P(Y|X,Z) ##########################
   if (distY == "normal") {
     # Subset parameters ------------------------------
-    theta_params <- params[1:(3 + length(Z))]
+    beta_params <- params[1:(3 + length(Z))]
     # ------------------------------ Subset parameters
   } else if (distY == "binomial") {
     # Subset parameters ------------------------------
-    theta_params <- params[1:(2 + length(Z))]
+    beta_params <- params[1:(2 + length(Z))]
     # ------------------------------ Subset parameters
   }
-  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
-  d_pYgivXZ <- part_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
-  d_loglik_theta <- d_pYgivXZ / matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = length(theta_params))
+  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
+  d_pYgivXZ <- part_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
+  d_loglik_theta <- d_pYgivXZ / matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = length(beta_params))
   # Predictor model P(X|Z) ###########################
   # Subset parameters --------------------------------
-  eta_params <- params[-c(1:length(theta_params))]
+  eta_params <- params[-c(1:length(beta_params))]
   # -------------------------------- Subset parameters
   pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
   d_pXgivZ <- part_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
@@ -320,12 +320,12 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
   # Derivatives of censored ##########################
   ####################################################
   # Integrate over joint P(Y,X,Z) --------------------
-  dim_params <- length(c(theta_params, eta_params))
+  dim_params <- length(c(beta_params, eta_params))
   joint_dens <- function(x, Yi, Zi) {
     ####################################################
     # Analysis model P(Y|X,Z) ##########################
     ####################################################
-    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, theta_params = theta_params)
+    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
 
     ####################################################
     # Predictor model P(X|Z) ###########################
@@ -353,8 +353,8 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
     ####################################################
     # Analysis model P(Y|X,Z) ##########################
     ####################################################
-    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, theta_params = theta_params)
-    d_pYgivXZ <- part_deriv_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, theta_params = theta_params)
+    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
+    d_pYgivXZ <- part_deriv_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
     ####################################################
     # Predictor model P(X|Z) ###########################
     ####################################################
@@ -391,8 +391,8 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
   # --------------------- Return matrix of derivatives
 }
 
-sandwich_B <- function(y, x, z = NULL, distY, theta_params, distX, eta_params) {
-  d_theta <- part_deriv_pYgivXandZ(y = y, x = x, z = z, distY = distY, theta_params = theta_params)
+sandwich_B <- function(y, x, z = NULL, distY, beta_params, distX, eta_params) {
+  d_theta <- part_deriv_pYgivXandZ(y = y, x = x, z = z, distY = distY, beta_params = beta_params)
   d_eta <- part_deriv_pXgivZ(x = x, z = z, distX = distX, eta_params = eta_params)
   d_theta_eta <- cbind(d_theta, d_eta)
   B <- matrix(data = 0, nrow = ncol(d_theta_eta), ncol = ncol(d_theta_eta))
