@@ -34,20 +34,20 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
   ####################################################
   if (distY == "normal") {
     # Subset parameters ------------------------------
-    theta_params <- params[1:(3 + length(Z))]
+    beta_params <- params[1:(3 + length(Z))]
     # ------------------------------ Subset parameters
   } else if (distY == "binomial") {
     # Subset parameters ------------------------------
-    theta_params <- params[1:(2 + length(Z))]
+    beta_params <- params[1:(2 + length(Z))]
     # ------------------------------ Subset parameters
   }
-  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, theta_params = theta_params)
+  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
 
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
   # Subset parameters --------------------------------
-  eta_params <- params[-c(1:length(theta_params))]
+  eta_params <- params[-c(1:length(beta_params))]
   # -------------------------------- Subset parameters
   # Check for parameters outside domain --------------
   if (distX == "gamma") {
@@ -111,7 +111,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     ####################################################
     # Analysis model P(Y|X,Z) ##########################
     ####################################################
-    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, theta_params = theta_params)
+    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
 
     ####################################################
     # Predictor model P(X|Z) ###########################
