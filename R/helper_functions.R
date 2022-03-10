@@ -391,14 +391,16 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
   # --------------------- Return matrix of derivatives
 }
 
-sandwich_B <- function(y, x, z = NULL, distY, beta_params, distX, eta_params) {
-  d_theta <- part_deriv_pYgivXandZ(y = y, x = x, z = z, distY = distY, beta_params = beta_params)
-  d_eta <- part_deriv_pXgivZ(x = x, z = z, distX = distX, eta_params = eta_params)
-  d_theta_eta <- cbind(d_theta, d_eta)
-  B <- matrix(data = 0, nrow = ncol(d_theta_eta), ncol = ncol(d_theta_eta))
-  for (c in 1:ncol(d_theta_eta)) {
-    for (r in c:ncol(d_theta_eta)) {
-      B[r, c] <- B[c, r] <- mean(d_theta_eta[, c] * d_theta_eta[, r])
+sandwich_B <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
+  # Calculate subject-specific derivatives -----------
+  ## of the log-likelihood ---------------------------
+  d_theta <- part_deriv_loglik(params = params, Y = Y, W = W, D = D, Z = Z,
+                               partX = partX, distY = distY, distX = distX, data = data)
+  # Construct the "meat" of the sandwich -------------
+  B <- matrix(data = 0, nrow = ncol(d_theta), ncol = ncol(d_theta))
+  for (c in 1:ncol(d_theta)) {
+    for (r in c:ncol(d_theta)) {
+      B[r, c] <- B[c, r] <- mean(d_theta[, c] * d_theta[, r])
     }
   }
   return(B)
