@@ -398,11 +398,13 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
   # --------------------- Return matrix of derivatives
 }
 
-sandwich_B <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
-  # Calculate subject-specific derivatives -----------
-  ## of the log-likelihood ---------------------------
-  d_theta <- part_deriv_loglik(params = params, Y = Y, W = W, D = D, Z = Z,
-                               partX = partX, distY = distY, distX = distX, data = data)
+# Calculate subject-specific derivatives -----------
+## of the log-likelihood ---------------------------
+## (Use as inputs into sandwich_B function) --------
+d_theta <- part_deriv_loglik(params = params, Y = Y, W = W, D = D, Z = Z,
+                             partX = partX, distY = distY, distX = distX, data = data)
+
+sandwich_B <- function(d_theta) {
   # Construct the "meat" of the sandwich -------------
   B <- matrix(data = 0, nrow = ncol(d_theta), ncol = ncol(d_theta))
   for (c in 1:ncol(d_theta)) {
@@ -541,4 +543,134 @@ second_deriv_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     # ------------------ Calculate partial derivatives
   }
   return(all_d2)
+}
+
+second_deriv_pYXZ <- function(y, x, z = NULL, distY, beta_params, distX, eta_params) {
+
+}
+
+second_deriv_loglik <- function(d_theta, params, Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
+  ####################################################
+  # Pre-processing ###################################
+  ####################################################
+  # Subset data to relevant, user-specified columns --
+  data <- data[, c(Y, W, D, Z)]
+  # Create variable X = W ----------------------------
+  data <- cbind(data, X = data[, W])
+  ## Make it NA for censored (D = 0) -----------------
+  data[data[, D] == 0, "X"] <- NA
+  ## < define predictor column name > ----------------
+  X <- "X"
+  ## ---------------- < define predictor column name >
+  # < number of uncensored subjects > ----------------
+  n1 <- sum(data[, D]) # -----------------------------
+  # ---------------- < number of uncensored subjects >
+  # Reordered data to be uncensored first ------------
+  data <- data[order(data[, D], decreasing = TRUE), ]
+  # ------------ Reordered data to be uncensored first
+  # Create subset of uncensored subjects' data -------
+  uncens_data <- data[1:n1, ]
+  # ------- Create subset of uncensored subjects' data
+  # Create subset of censored subjects' data ---------
+  cens_data <- data[-c(1:n1), ]
+  # --------- Create subset of censored subjects' data
+  ####################################################
+  # Derivatives of uncensored ########################
+  ####################################################
+  # Analysis model P(Y|X,Z) ##########################
+  if (distY == "normal") {
+    # Subset parameters ------------------------------
+    beta_params <- params[1:(3 + length(Z))]
+    # ------------------------------ Subset parameters
+  } else if (distY == "binomial") {
+    # Subset parameters ------------------------------
+    beta_params <- params[1:(2 + length(Z))]
+    # ------------------------------ Subset parameters
+  }
+  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
+  d_pYgivXZ <- part_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
+  d_loglik_theta <- d_pYgivXZ / matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = length(beta_params))
+  # Predictor model P(X|Z) ###########################
+  # Subset parameters --------------------------------
+  eta_params <- params[-c(1:length(beta_params))]
+  # -------------------------------- Subset parameters
+  pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
+  d_pXgivZ <- part_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
+  d_loglik_eta <- d_pXgivZ / matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = length(eta_params))
+  # Return deriv theta and eta side-by-side ----------
+  d_loglik <- cbind(d_loglik_theta, d_loglik_eta)
+  # ---------- Return deriv theta and eta side-by-side
+  ####################################################
+  # Derivatives of censored ##########################
+  ####################################################
+  # Integrate over joint P(Y,X,Z) --------------------
+  dim_params <- length(c(beta_params, eta_params))
+  joint_dens <- function(x, Yi, Zi) {
+    ####################################################
+    # Analysis model P(Y|X,Z) ##########################
+    ####################################################
+    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
+
+    ####################################################
+    # Predictor model P(X|Z) ###########################
+    ####################################################
+    pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
+
+    ####################################################
+    # Joint density P(Y,X,Z) ###########################
+    ####################################################
+    return(pYgivXZ * pXgivZ)
+  }
+  integrate_joint_dens <- function(data_row) {
+    data_row <- data.frame(t(data_row))
+    return(
+      tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
+                                Yi = data_row[Y], Zi = data_row[, Z])$value,
+               error = function(err) {0})
+    )
+  }
+  integral_joint <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
+  integral_joint_wide <- matrix(data = rep(integral_joint, each = dim_params), ncol = dim_params, byrow = TRUE)
+  # -------------------- Integrate over joint P(Y,X,Z)
+  # Integrate over partial derivative ----------------
+  part_deriv_joint_dens <- function(x, Yi, Zi, col = NULL) {
+    ####################################################
+    # Analysis model P(Y|X,Z) ##########################
+    ####################################################
+    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
+    d_pYgivXZ <- part_deriv_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
+    ####################################################
+    # Predictor model P(X|Z) ###########################
+    ####################################################
+    pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
+    d_pXgivZ <- part_deriv_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
+    ####################################################
+    # Partial derivatives ##############################
+    ####################################################
+    d_pYXZ <- cbind(d_pYgivXZ * matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = ncol(d_pYgivXZ), byrow = FALSE),
+                    matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = ncol(d_pXgivZ), byrow = FALSE) * d_pXgivZ)
+    if (!is.null(col)) {
+      return(d_pYXZ[, col])
+    } else {
+      return(d_pYXZ)
+    }
+  }
+  integrate_part_deriv_joint_dens <- function(data_row) {
+    data_row <- data.frame(t(data_row))
+    return_mat <- matrix(data = NA, nrow = 1, ncol = dim_params)
+    for (col in 1:ncol(return_mat)) {
+      return_mat[, col] <- tryCatch(expr = integrate(f = part_deriv_joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
+                                                     Yi = data_row[Y], Zi = data_row[, Z], col = col)$value,
+                                    error = function(err) {0})
+    }
+    return(return_mat)
+  }
+  integral_d_loglik <- t(apply(X = cens_data, MARGIN = 1, FUN = integrate_part_deriv_joint_dens))
+  # ---------------- Integrate over partial derivative
+  # Divide integral of deriv by integral of P(Y,X,Z) -
+  d_loglik <- rbind(d_loglik, integral_d_loglik / integral_joint_wide)
+  # - Divide integral of deriv by integral of P(Y,X,Z)
+  # Return matrix of derivatives ---------------------
+  return(d_loglik)
+  # --------------------- Return matrix of derivatives
 }
