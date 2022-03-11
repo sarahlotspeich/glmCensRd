@@ -558,7 +558,7 @@ second_deriv_loglik_wrt_beta <- function(pYgivXZ, d_pYgivXZ, d2_pYgivXZ, dimZ = 
   # d2/dbeta0dbeta2, ..., d2/dbeta0dbetap ------------------------------
   if (dimZ > 0) {
     for (c in 1:dimZ) {
-      d2_loglik_beta[, (start_col + 2 + c)] <- (d2_pYgivXZ[, (start_col + 2 + c)] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, (2 + c)]) / (pYgivXZ ^ 2)
+      d2_loglik_beta[, (start_col + 1 + c)] <- (d2_pYgivXZ[, (start_col + 2 + c)] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, (2 + c)]) / (pYgivXZ ^ 2)
     }
   }
   # d2/dbeta0dsigma2 of loglik -----------------------------------------
@@ -645,6 +645,7 @@ second_deriv_loglik <- function(d_theta, params, Y, W, D, Z = NULL, partX = 50, 
   pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
   d_pYgivXZ <- d_theta[1:n1, 1:length(beta_params)]
   d2_pYgivXZ <- second_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
+  d2_loglik_beta <- second_deriv_loglik_wrt_beta(pYgivXZ = pYgivXZ, d_pYgivXZ = d_pYgivXZ, d2_pYgivXZ = d2_pYgivXZ, dimZ = length(Z))
   # Predictor model P(X|Z) ###########################
   # Subset parameters --------------------------------
   eta_params <- params[-c(1:length(beta_params))]
