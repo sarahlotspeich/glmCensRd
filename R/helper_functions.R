@@ -536,17 +536,13 @@ second_deriv_pXgivZ <- function(x, z = NULL, distX, eta_params) {
             all_d2[, (start_col + c)] <- data.frame(z)[, j] * data.frame(z)[, (c + 1)] * all_d2[, 1]
           }
         }
-        all_d2[, end_col] <- (- 2 - sigX ^ 2 + eX ^ 2) / (2 * sigX ^ 2) * d_pYgivXZ[, (1 + j)] # d2/detajdsigma2
+        all_d2[, end_col] <- (- 2 - sigX ^ 2 + eX ^ 2) / (2 * sigX ^ 2) * d_pXgivZ[, (1 + j)] # d2/detajdsigma2
       }
     }
     all_d2[, ncol(all_d2)] <- pXgivZ / ((sigX ^ 2) ^ 2) * (((- sigX ^ 2 + eX ^ 2) / (2 * sigX ^ 2)) + 1) # d2/d2(sigma2)2
     # ------------------ Calculate partial derivatives
   }
   return(all_d2)
-}
-
-second_deriv_pYXZ <- function(y, x, z = NULL, distY, beta_params, distX, eta_params) {
-
 }
 
 second_deriv_loglik <- function(d_theta, params, Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
@@ -588,15 +584,15 @@ second_deriv_loglik <- function(d_theta, params, Y, W, D, Z = NULL, partX = 50, 
     # ------------------------------ Subset parameters
   }
   pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
-  d_pYgivXZ <- part_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
-  d_loglik_theta <- d_pYgivXZ / matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = length(beta_params))
+  d_pYgivXZ <- d_theta[, 1:length(beta_params)]
+  d2_pYgivXZ <- second_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
   # Predictor model P(X|Z) ###########################
   # Subset parameters --------------------------------
   eta_params <- params[-c(1:length(beta_params))]
   # -------------------------------- Subset parameters
   pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  d_pXgivZ <- part_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  d_loglik_eta <- d_pXgivZ / matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = length(eta_params))
+  d_pXgivZ <- d_theta[, - c(1:length(beta_params))]
+  d2_pXgivZ <- second_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
   # Return deriv theta and eta side-by-side ----------
   d_loglik <- cbind(d_loglik_theta, d_loglik_eta)
   # ---------- Return deriv theta and eta side-by-side
