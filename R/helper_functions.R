@@ -320,9 +320,9 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
   pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
   d_pXgivZ <- part_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
   d_loglik_eta <- d_pXgivZ / matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = length(eta_params))
-  # Return deriv theta and eta side-by-side ----------
+  # Return deriv beta and eta side-by-side ----------
   d_loglik <- cbind(d_loglik_theta, d_loglik_eta)
-  # ---------- Return deriv theta and eta side-by-side
+  # ---------- Return deriv beta and eta side-by-side
   ####################################################
   # Derivatives of censored ##########################
   ####################################################
@@ -545,6 +545,65 @@ second_deriv_pXgivZ <- function(x, z = NULL, distX, eta_params) {
   return(all_d2)
 }
 
+second_deriv_loglik_wrt_beta <- function(pYgivXZ, d_pYgivXZ, d2_pYgivXZ, dimZ = 0) {
+  # Create matrix to hold double derivatives of loglik -----------------
+  d2_loglik_beta <- matrix(data = 0, nrow = nrow(d2_pYgivXZ), ncol = ncol(d2_pYgivXZ))
+  ## With respect to beta0 /////////////////////////////////////////////
+  start_col <- 1
+  end_col <- 3 + dimZ
+  # d2/d2beta02 of loglik ----------------------------------------------
+  d2_loglik_beta[, 1] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, 1]) / (pYgivXZ ^ 2)
+  # d2/d2beta12 of loglik ----------------------------------------------
+  d2_loglik_beta[, (start_col + 1)] <- (d2_pYgivXZ[, (start_col + 1)] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, 2]) / (pYgivXZ ^ 2)
+  # d2/dbeta0dbeta2, ..., d2/dbeta0dbetap ------------------------------
+  if (dimZ > 0) {
+    for (c in 1:dimZ) {
+      d2_loglik_beta[, (start_col + 2 + c)] <- (d2_pYgivXZ[, (start_col + 2 + c)] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, (2 + c)]) / (pYgivXZ ^ 2)
+    }
+  }
+  # d2/dbeta0dsigma2 of loglik -----------------------------------------
+  d2_loglik_beta[, end_col] <- (d2_pYgivXZ[, end_col] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
+  ## ///////////////////////////////////////////// With respect to beta0
+  ## With respect to beta1 /////////////////////////////////////////////
+  diff <- end_col - start_col
+  start_col <- end_col + 1
+  end_col <- end_col + diff
+  # d2/d2beta12 of loglik ----------------------------------------------
+  d2_loglik_beta[, start_col] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, 2]) / (pYgivXZ ^ 2)
+  # d2/dbeta1dbeta2, ..., d2/dbeta1dbetap ------------------------------
+  if (dimZ > 0) {
+    for (c in 1:dimZ) {
+      d2_loglik_beta[, (start_col + c)] <- (d2_pYgivXZ[, (start_col + c)] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, (2 + c)]) / (pYgivXZ ^ 2)
+    }
+  }
+  # d2/dbeta0dsigma2 of loglik -----------------------------------------
+  d2_loglik_beta[, end_col] <- (d2_pYgivXZ[, end_col] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
+  ## ///////////////////////////////////////////// With respect to beta1
+  ## With respect to beta21, ..., beta2p ///////////////////////////////
+  if (dimZ > 0) {
+    for (j in 1:dimZ) {
+      diff <- end_col - start_col
+      start_col <- end_col + 1
+      end_col <- end_col + diff
+      # d2/d2betaj2 of loglik ----------------------------
+      d2_loglik_beta[, start_col] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, (2 + j)]) / (pYgivXZ ^ 2)
+      if (p > 1) {
+        for (c in 1:(p - j)) {
+          d2_loglik_beta[, (start_col + j)] <- (d2_pYgivXZ[, (start_col + j)] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, (2 + j + c)]) / (pYgivXZ ^ 2)
+        }
+      }
+      # d2/dbetajdsigma2 of loglik -----------------------
+      d2_loglik_beta[, end_col] <- (d2_pYgivXZ[, end_col] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
+    }
+  }
+  ## /////////////////////////////// With respect to beta21, ..., beta2p
+  ## With respect to sigma2 ////////////////////////////////////////////
+  # d2/d2sigma22 of loglik ---------------------------
+  d2_loglik_beta[, ncol(d2_loglik_beta)] <- (d2_pYgivXZ[, ncol(d2_pYgivXZ)] * pYgivXZ - d_pYgivXZ[, ncol(d_pYgivXZ)] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
+  ## //////////////////////////////////////////// With respect to sigma2
+  return(d2_loglik_beta)
+}
+
 second_deriv_loglik <- function(d_theta, params, Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
   ####################################################
   # Pre-processing ###################################
@@ -584,18 +643,69 @@ second_deriv_loglik <- function(d_theta, params, Y, W, D, Z = NULL, partX = 50, 
     # ------------------------------ Subset parameters
   }
   pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
-  d_pYgivXZ <- d_theta[, 1:length(beta_params)]
+  d_pYgivXZ <- d_theta[1:n1, 1:length(beta_params)]
   d2_pYgivXZ <- second_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
   # Predictor model P(X|Z) ###########################
   # Subset parameters --------------------------------
   eta_params <- params[-c(1:length(beta_params))]
   # -------------------------------- Subset parameters
   pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  d_pXgivZ <- d_theta[, - c(1:length(beta_params))]
+  d_pXgivZ <- d_theta[1:n1, - c(1:length(beta_params))]
   d2_pXgivZ <- second_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  # Return deriv theta and eta side-by-side ----------
-  d_loglik <- cbind(d_loglik_theta, d_loglik_eta)
-  # ---------- Return deriv theta and eta side-by-side
+  ## Create matrix to hold double derivatives --------
+  ## of loglik ---------------------------------------
+  d2_loglik_eta <- matrix(data = 0, nrow = nrow(d2_pXgivZ), ncol = ncol(d2_pXgivZ))
+  ## With respect to beta0 ---------------------------
+  start_col <- 1
+  end_col <- (2 + ncol(data.frame(z)))
+  # d2/d2eta02 of loglik -----------------------------
+  d2_loglik_eta[, start_col] <- (d2_pXgivZ[, start_col] * pXgivZ - d_pXgivZ[, 1] * d_pXgivZ[, 1]) / (pXgivZ ^ 2)
+  if (!is.null(z)) {
+    # d2/deta0deta1, ..., d2/deta0detap --------------
+    for (c in 1:ncol(data.frame(z))) {
+      d2_loglik_eta[, (start_col + c)] <- (d2_pXgivZ[, (start_col + c)] * pXgivZ - d_pXgivZ[, 1] * d_pXgivZ[, (1 + c)]) / (pXgivZ ^ 2)
+    }
+  }
+  # d2/deta0dsigma2 of loglik ------------------------
+  d2_loglik_eta[, end_col] <- (d2_pXgivZ[, end_col] * pXgivZ - d_pXgivZ[, 1] * d_pXgivZ[, ncol(d_pXgivZ)]) / (pXgivZ ^ 2)
+  ## With respect to beta1 ---------------------------
+  start_col <- (3 + c) + 1
+  end_col <- 2 * (3 + c) - 1
+  # d2/d2beta12 of loglik ----------------------------
+  d2_loglik_beta[, start_col] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, 2]) / (pYgivXZ ^ 2)
+  # d2/dbeta1dbeta2, ..., d2/dbeta1dbetap ------------
+  if (!is.null(z)) {
+    for (c in 1:ncol(data.frame(z))) {
+      # d2/d2betaj2 of loglik
+      d2_loglik_beta[, (start_col + c)] <- (d2_pYgivXZ[, (start_col + c)] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, (2 + c)]) / (pYgivXZ ^ 2)
+    }
+    # d2/dbeta0dsigma2 of loglik
+    d2_loglik_beta[, (start_col + c + 1)] <- (d2_pYgivXZ[, (2 + c)] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
+  }
+  ## With respect to beta21, ..., beta2p -----------
+  if (!is.null(z)) {
+    p <- ncol(data.frame(z))
+    for (j in 1:p) {
+      diff <- end_col - start_col
+      start_col <- end_col + 1
+      end_col <- end_col + diff
+      # d2/d2betaj2 of loglik ----------------------------
+      d2_loglik_beta[, start_col] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, (2 + j)]) / (pYgivXZ ^ 2)
+      if (p > 1) {
+        for (c in 1:(p - j)) {
+          d2_loglik_beta[, (start_col + j)] <- (d2_pYgivXZ[, (start_col + j)] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, (2 + j + c)]) / (pYgivXZ ^ 2)
+        }
+      }
+      # d2/dbetajdsigma2 of loglik -----------------------
+      d2_loglik_beta[, end_col] <- (d2_pYgivXZ[, (start_col + c + 1)] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
+    }
+  }
+  # d2/d2sigma22 of loglik ---------------------------
+  d2_loglik_beta[, ncol(d2_loglik_beta)] <- (d2_pYgivXZ[, ncol(d2_pYgivXZ)] * pYgivXZ - d_pYgivXZ[, ncol(d_pYgivXZ)] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
+
+  # Return deriv beta and eta side-by-side ----------
+  d_loglik <- cbind(d_loglik_beta, d_loglik_eta)
+  # ---------- Return deriv beta and eta side-by-side
   ####################################################
   # Derivatives of censored ##########################
   ####################################################
