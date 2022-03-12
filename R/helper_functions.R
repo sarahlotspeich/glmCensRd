@@ -292,6 +292,7 @@ calc_indiv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = 
   ll <- append(ll, log_integral)
   # -------- Log-likelihood contribution of censored X
   # Return (-1) x log-likelihood for use with nlm() --
+  ll[ll == - Inf] <- 0
   return(ll)
   # -- Return (-1) x log-likelihood for use with nlm()
 }
