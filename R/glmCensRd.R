@@ -75,70 +75,77 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
 
   ## Sandwich covariance
   param_cov <- solve(A) %*% B %*% t(solve(A))
-
-  #param_se <- sqrt(diag(solve(mod$hessian)))
+  param_se <- sqrt(diag(param_cov))
 
   ####################################################
   # Analysis model P(Y|X,Z) ##########################
   ####################################################
   if (distY == "normal") {
-    modY_est <- param_est[1:(length(c(X, Z)) + 1)]
-    modY_se <- NA # param_se[1:(length(c(X, Z)) + 1)]
-    modY_sigma2 <- param_est[(length(c(X, Z)) + 1) + 1] ^ 2
+    dim_beta <- length(c(X, Z)) + 1
+    modY_est <- param_est[1:dim_beta]
+    modY_se <- param_se[1:dim_beta]
+    modY_sigma2 <- param_est[dim_beta + 1] ^ 2
     modY_coeff <- data.frame(coeff = modY_est, se = modY_se)
     rownames(modY_coeff) <- c("(Intercept)", X, Z)
     modY <- list(distY = distY, mean = modY_coeff, sigma2 = modY_sigma2)
-    param_est <- param_est[-c(1:(length(c(X, Z)) + 2))]
-    #param_se <- param_se[-c(1:(length(c(X, Z)) + 2))]
+    param_est <- param_est[-c(1:(dim_beta + 1))]
+    param_se <- param_se[-c(1:(dim_beta + 1))]
   } else if (distY == "binomial") {
-    modY_est <- param_est[1:(length(c(X, Z)) + 1)]
-    modY_se <- NA #param_se[1:(length(c(X, Z)) + 1)]
+    dim_beta <- length(c(X, Z)) + 1
+    modY_est <- param_est[1:dim_beta]
+    modY_se <- param_se[1:dim_beta]
     modY_coeff <- data.frame(coeff = modY_est, se = modY_se)
     rownames(modY_coeff) <- c("(Intercept)", X, Z)
     modY <- list(distY = distY, mean = modY_coeff)
-    param_est <- param_est[-c(1:(length(c(X, Z)) + 1))]
-    #param_se <- param_se[-c(1:(length(c(X, Z)) + 1))]
+    param_est <- param_est[-c(1:dim_beta)]
+    param_se <- param_se[-c(1:dim_beta)]
   }
 
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
   if (distX %in% c("normal", "log-normal")) {
-    modX_est <- param_est[1:(length(Z) + 1)]
-    modX_se <- NA # param_se[1:(length(Z) + 1)]
-    modX_sigma2 <- param_est[(length(Z) + 1) + 1] ^ 2
+    dim_eta <- length(Z) + 1
+    modX_est <- param_est[1:dim_eta]
+    modX_se <- param_se[1:dim_eta]
     modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
+    modX_sigma2 <- param_est[dim_eta + 1] ^ 2
     modX <- list(distX = distX, mean = modX_coeff, sigma2 = modX_sigma2)
   } else if (distX %in% c("gamma", "inverse-gaussian")) {
     modX_shape_est <- param_est[1]
-    modX_shape_se <- NA #param_se[1:(length(Z) + 1)]
+    modX_shape_se <- param_se[1]
     modX_shape <- data.frame(coeff = modX_shape_est, se = modX_shape_se)
     rownames(modX_shape) <- c("(Intercept)")
     param_est <- param_est[-1]
+    param_se <- param_se[-1]
 
-    modX_est <- param_est[1:(length(Z) + 1)]
-    modX_se <- NA # param_se[1:(length(Z) + 1)]
+    dim_eta <- length(Z) + 1
+    modX_est <- param_est[1:dim_eta]
+    modX_se <- param_se[1:dim_eta]
     modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
 
     modX <- list(distX = distX, mean = modX_coeff, shape = modX_shape)
   } else if (distX == "weibull") {
     modX_shape_est <- param_est[1]
-    modX_shape_se <- NA #param_se[1:(length(Z) + 1)]
+    modX_shape_se <- param_se[1]
     modX_shape <- data.frame(coeff = modX_shape_est, se = modX_shape_se)
     rownames(modX_shape) <- c("(Intercept)")
     param_est <- param_est[-1]
+    param_se <- param_se[-1]
 
-    modX_est <- param_est[1:(length(Z) + 1)]
-    modX_se <- NA # param_se[1:(length(Z) + 1)]
+    dim_eta <- (length(Z) + 1)
+    modX_est <- param_est[1:dim_eta]
+    modX_se <- param_se[1:dim_eta]
     modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
 
     modX <- list(distX = distX, scale = modX_coeff, shape = modX_shape)
   } else if (distX %in% c("exponential", "poisson")) {
-    modX_est <- param_est[1:(length(Z) + 1)]
-    modX_se <- NA # param_se[1:(length(Z) + 1)]
+    dim_eta <- length(Z) + 1
+    modX_est <- param_est[1:dim_eta]
+    modX_se <- param_se[1:dim_eta]
     modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
     modX <- list(distX = distX, rate = modX_coeff)
