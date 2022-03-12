@@ -168,123 +168,10 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
   return(pXgivZ)
 }
 
-part_deriv_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
-  if (distY == "normal") {
-    # Get parameters ---------------------------------
-    ## Construct mean --------------------------------
-    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
-    if (!is.null(z)) {
-      beta2 <- beta_params[-c(1:2, length(beta_params))]
-      if (length(beta2) == 1) {
-        meanY <- meanY + beta2 * z
-      } else {
-        meanY <- meanY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
-      }
-    }
-    ## Estimate sqrt(variance) directly --------------
-    sigY <- beta_params[length(beta_params)]
-    # --------------------------------- Get parameters
-    # Calculate P(Y|X,Z) -----------------------------
-    eY <- as.numeric(y) - meanY
-    pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
-    # ----------------------------- Calculate P(Y|X,Z)
-    # Calculate partial derivatives ------------------
-    all_d <- matrix(data = NA, nrow = nrow(pYgivXZ), ncol = length(beta_params))
-    all_d[, 1] <- eY / (sigY ^ 2) * pYgivXZ # d/dbeta0
-    all_d[, 2] <- x * all_d[, 1] # d/dbeta1
-    # d/dbeta2, ..., d/dbetap
-    if (!is.null(z)) {
-      if (ncol(data.frame(z)) > 1) {
-        for (c in 3:(length(beta_params) - 1)) {
-          all_d[, c] <- data.frame(z)[, c] * all_d[, 1]
-        }
-      } else {
-        all_d[, 3] <- z * all_d[, 1]
-      }
-    }
-    all_d[, ncol(all_d)] <- (- (sigY ^ 2) + eY ^ 2) / (2 * (sigY ^ 2) ^ 2) * pYgivXZ # d/dsigma2
-    # ------------------ Calculate partial derivatives
-    # Give identifiable column names -----------------
-    colnames(all_d) <- c(paste0("d_beta", 0:(length(beta_params) - 2)), "d_sigmaY2")
-    # ----------------- Give identifiable column names
-  } else if (distY == "binomial") {
-    # Get parameters ---------------------------------
-    ## Construct mean --------------------------------
-    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
-    if (!is.null(z)) {
-      beta2 <- beta_params[-c(1:2)]
-      if (length(beta2) == 1) {
-        meanY <- meanY + z
-      } else {
-        meanY <- meanY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
-      }
-    }
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    pYgivXZ <- exp(- (1 - y) * meanY) / (1 + exp(meanY))
-    # -------------------------------------- Calculate
-
-  }
-  return(all_d)
-}
-
-part_deriv_pXgivZ <- function(x, z = NULL, distX, eta_params) {
-  if (distX == "normal") {
-    # Calculate P(Y|X,Z) -----------------------------
-    pXgivZ <- calc_pXgivZ(x = x, z = z, distX = distX, eta_params = eta_params)
-    # ----------------------------- Calculate P(Y|X,Z)
-    # Get parameters ---------------------------------
-    ## Construct mean --------------------------------
-    meanX <- eta_params[1]
-    if (!is.null(z)) {
-      eta1 <- eta_params[-c(1, length(eta_params))]
-      if (length(eta1) == 1) {
-        meanX <- meanX + eta1 * z
-      } else {
-        meanX <- meanX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-      }
-    }
-    ## Estimate sqrt(variance) directly --------------
-    sigX <- eta_params[length(eta_params)]
-    eX <- data.matrix(x - meanX)
-    pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
-    # --------------------------------- Get parameters
-    # Calculate partial derivatives ------------------
-    all_d <- matrix(data = NA, nrow = nrow(pXgivZ), ncol = length(eta_params))
-    all_d[, 1] <- eX / (sigX ^ 2) * pXgivZ # d/deta0
-    #all_d[, 2] <- x * all_d[, 1] # d/deta1
-    # d/deta1, ..., d/detap
-    if (!is.null(z)) {
-      if (ncol(data.frame(z)) > 1) {
-        for (c in 2:(length(eta_params) - 1)) {
-          all_d[, c] <- data.frame(z)[, c] * all_d[, 1]
-        }
-      } else {
-        all_d[, 2] <- z * all_d[, 1]
-      }
-    }
-    all_d[, ncol(all_d)] <- (- (sigX ^ 2) + eX ^ 2) / (2 * (sigX ^ 2) ^ 2) * pXgivZ # d/dsigma2
-    # ------------------ Calculate partial derivatives
-    # Give identifiable column names -----------------
-    colnames(all_d) <- c(paste0("d_eta", 0:(length(eta_params) - 2)), "d_sigmaX2")
-    # ----------------- Give identifiable column names
-  }
-  return(all_d)
-}
-
-part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
+calc_indiv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
   ####################################################
   # Pre-processing ###################################
   ####################################################
-  # Subset data to relevant, user-specified columns --
-  data <- data[, c(Y, W, D, Z)]
-  # Create variable X = W ----------------------------
-  data <- cbind(data, X = data[, W])
-  ## Make it NA for censored (D = 0) -----------------
-  data[data[, D] == 0, "X"] <- NA
-  ## < define predictor column name > ----------------
-  X <- "X"
-  ## ---------------- < define predictor column name >
   # < number of uncensored subjects > ----------------
   n1 <- sum(data[, D]) # -----------------------------
   # ---------------- < number of uncensored subjects >
@@ -294,13 +181,12 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
   # Create subset of uncensored subjects' data -------
   uncens_data <- data[1:n1, ]
   # ------- Create subset of uncensored subjects' data
-  # Create subset of censored subjects' data ---------
+  # Create subset of censored subjects' data -------
   cens_data <- data[-c(1:n1), ]
-  # --------- Create subset of censored subjects' data
-  ####################################################
-  # Derivatives of uncensored ########################
+  # ------- Create subset of censored subjects' data
   ####################################################
   # Analysis model P(Y|X,Z) ##########################
+  ####################################################
   if (distY == "normal") {
     # Subset parameters ------------------------------
     beta_params <- params[1:(3 + length(Z))]
@@ -311,23 +197,71 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
     # ------------------------------ Subset parameters
   }
   pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
-  d_pYgivXZ <- part_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
-  d_loglik_theta <- d_pYgivXZ / matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = length(beta_params))
+
+  ####################################################
   # Predictor model P(X|Z) ###########################
+  ####################################################
   # Subset parameters --------------------------------
   eta_params <- params[-c(1:length(beta_params))]
   # -------------------------------- Subset parameters
+  # Check for parameters outside domain --------------
+  if (distX == "gamma") {
+    # Shape and scale of Gamma > 0 -------------------
+    shapeX <- eta_params[1]
+    meanX <- eta_params[2]
+    if (length(Z) > 0) {
+      meanX <- meanX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta_params[3:(2 + length(Z))], ncol = 1))
+    }
+    scaleX <- meanX / shapeX
+    if (any(c(shapeX, scaleX) <= 0)) { return(99999)}
+    # ------------------- Shape and scale of Gamma > 0
+  } else if (distX == "inverse-gaussian") {
+    # Shape and mean of inverse-Gaussian both > 0 ----
+    shapeX <- eta_params[1]
+    meanX <- eta_params[2]
+    if (length(Z) > 0) {
+      meanX <- meanX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta_params[3:(2 + length(Z))], ncol = 1))
+    }
+    if (any(c(shapeX, meanX) <= 0)) { return(99999)}
+    # --------------------------------- Get parameters
+  } else if (distX == "weibull") {
+    # Shape and scale of Weibull both > 0 ------------
+    shapeX <- eta_params[1]
+    scaleX <- eta_params[2]
+    if (length(Z) > 0) {
+      eta1 <- eta_params[3:(2 + length(Z))]
+      scaleX <- scaleX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
+    }
+    if (any(c(shapeX, scaleX) <= 0)) { return(99999)}
+  } else if (distX %in% c("exponential", "poisson")) {
+    # Rate of Exponential or Poisson > 0 -------------
+    rateX <- eta_params[1]
+    if (length(Z) > 0) {
+      eta1 <- eta_params[2:(1 + length(Z))]
+      if (length(eta1) == 1) {
+        rateX <- rateX + eta1 * uncens_data[, Z]
+      } else {
+        rateX <- rateX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
+      }
+    }
+    if (any(rateX <= 0)) { return (99999) }
+  }
   pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  d_pXgivZ <- part_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  d_loglik_eta <- d_pXgivZ / matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = length(eta_params))
-  # Return deriv beta and eta side-by-side ----------
-  d_loglik <- cbind(d_loglik_theta, d_loglik_eta)
-  # ---------- Return deriv beta and eta side-by-side
+
   ####################################################
-  # Derivatives of censored ##########################
+  # Calculate joint density P(Y,X,Z) #################
   ####################################################
-  # Integrate over joint P(Y,X,Z) --------------------
-  dim_params <- length(c(beta_params, eta_params))
+  uncens_data <- cbind(uncens_data, jointP = 1)
+  uncens_data[, "jointP"] <- pYgivXZ * pXgivZ
+  #uncens_data <- data.frame(cbind(uncens_data, jointP = pYgivXZ * pXgivZ))
+
+  ####################################################
+  # Calculate the log-likelihood #####################
+  ####################################################
+  # Log-likelihood contribution of uncensored X ------
+  ll <- log(uncens_data[, "jointP"])
+  # ------ Log-likelihood contribution of uncensored X
+  # Log-likelihood contribution of censored X --------
   joint_dens <- function(x, Yi, Zi) {
     ####################################################
     # Analysis model P(Y|X,Z) ##########################
@@ -352,432 +286,109 @@ part_deriv_loglik <- function(params, Y, W, D, Z = NULL, partX = 50, distY = "no
                error = function(err) {0})
     )
   }
-  integral_joint <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
-  integral_joint_wide <- matrix(data = rep(integral_joint, each = dim_params), ncol = dim_params, byrow = TRUE)
-  # -------------------- Integrate over joint P(Y,X,Z)
-  # Integrate over partial derivative ----------------
-  part_deriv_joint_dens <- function(x, Yi, Zi, col = NULL) {
-    ####################################################
-    # Analysis model P(Y|X,Z) ##########################
-    ####################################################
-    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
-    d_pYgivXZ <- part_deriv_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
-    ####################################################
-    # Predictor model P(X|Z) ###########################
-    ####################################################
-    pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
-    d_pXgivZ <- part_deriv_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
-    ####################################################
-    # Partial derivatives ##############################
-    ####################################################
-    d_pYXZ <- cbind(d_pYgivXZ * matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = ncol(d_pYgivXZ), byrow = FALSE),
-                    matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = ncol(d_pXgivZ), byrow = FALSE) * d_pXgivZ)
-    if (!is.null(col)) {
-      return(d_pYXZ[, col])
-    } else {
-      return(d_pYXZ)
-    }
-  }
-  integrate_part_deriv_joint_dens <- function(data_row) {
-    data_row <- data.frame(t(data_row))
-    return_mat <- matrix(data = NA, nrow = 1, ncol = dim_params)
-    for (col in 1:ncol(return_mat)) {
-      return_mat[, col] <- tryCatch(expr = integrate(f = part_deriv_joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
-                                                     Yi = data_row[Y], Zi = data_row[, Z], col = col)$value,
-                                    error = function(err) {0})
-    }
-    return(return_mat)
-  }
-  integral_d_loglik <- t(apply(X = cens_data, MARGIN = 1, FUN = integrate_part_deriv_joint_dens))
-  # ---------------- Integrate over partial derivative
-  # Divide integral of deriv by integral of P(Y,X,Z) -
-  d_loglik <- rbind(d_loglik, integral_d_loglik / integral_joint_wide)
-  # - Divide integral of deriv by integral of P(Y,X,Z)
-  # Return matrix of derivatives ---------------------
-  return(d_loglik)
-  # --------------------- Return matrix of derivatives
+  integral <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
+  log_integral <- log(integral)
+  log_integral[log_integral == -Inf] <- 0
+  ll <- append(ll, log_integral)
+  # -------- Log-likelihood contribution of censored X
+  # Return (-1) x log-likelihood for use with nlm() --
+  return(ll)
+  # -- Return (-1) x log-likelihood for use with nlm()
 }
 
-# Calculate subject-specific derivatives -----------
-## of the log-likelihood ---------------------------
-## (Use as inputs into sandwich_B function) --------
-d_theta <- part_deriv_loglik(params = params, Y = Y, W = W, D = D, Z = Z,
-                             partX = partX, distY = distY, distX = distX, data = data)
-
-sandwich_B <- function(d_theta) {
-  # Construct the "meat" of the sandwich -------------
-  B <- matrix(data = 0, nrow = ncol(d_theta), ncol = ncol(d_theta))
-  for (c in 1:ncol(d_theta)) {
-    for (r in c:ncol(d_theta)) {
-      B[r, c] <- B[c, r] <- mean(d_theta[, c] * d_theta[, r])
-    }
-  }
-  return(B)
-}
-
-second_deriv_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
-  if (distY == "normal") {
-    # Get parameters ---------------------------------
-    ## Construct mean --------------------------------
-    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
-    if (!is.null(z)) {
-      beta2 <- beta_params[-c(1:2, length(beta_params))]
-      if (length(beta2) == 1) {
-        meanY <- meanY + beta2 * z
-      } else {
-        meanY <- meanY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
-      }
-    }
-    ## Estimate sqrt(variance) directly --------------
-    sigY <- beta_params[length(beta_params)]
-    # --------------------------------- Get parameters
-    # Calculate P(Y|X,Z) -----------------------------
-    eY <- as.numeric(y) - meanY
-    pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
-    # ----------------------------- Calculate P(Y|X,Z)
-    # Calculate partial derivatives ------------------
-    d_pYgivXZ <- part_deriv_pYgivXandZ(y = y, x = x, z = z, distY = distY, beta_params = beta_params)
-    # ------------------ Calculate partial derivatives
-    # Calculate second derivatives -------------------
-    num_deriv <- sum(length(beta_params) - 0:(length(beta_params) - 1))
-    all_d2 <- matrix(data = NA, nrow = nrow(pYgivXZ), ncol = num_deriv)
-    ## With respect to beta0 -------------------------
-    start_col <- 1
-    end_col <- 3 + ncol(data.frame(z))
-    all_d2[, 1] <- (eY ^ 2 - sigY ^ 2) / ((sigY ^ 2) ^ 2) * pYgivXZ # d2/d2beta02
-    all_d2[, 2] <- x * all_d2[, 1] # d2/dbeta0dbeta1
-    # d/dbeta0dbeta2, ..., d/dbeta0dbetap
-    if (!is.null(z)) {
-      for (c in 1:ncol(data.frame(z))) {
-        all_d2[, (2 + c)] <- data.frame(z)[, c] * all_d2[, 1]
-      }
-    }
-    all_d2[, end_col] <- (- 2 - sigY ^ 2 + eY ^ 2) / (2 * sigY ^ 2) * d_pYgivXZ[, "d_beta0"] # d2/dbeta0dsigma2
-    ## With respect to beta1 --------------------------
-    start_col <- end_col + 1
-    end_col <- end_col + (end_col - 1)
-    all_d2[, start_col] <- x ^ 2 * all_d2[, 1] # d2/d2beta12
-    # d/dbeta1dbeta2, ..., d/dbeta1dbetap
-    if (!is.null(z)) {
-      for (c in 1:ncol(data.frame(z))) {
-        all_d2[, (start_col + c)] <- x * data.frame(z)[, c] * all_d2[, 1]
-      }
-    }
-    all_d2[, end_col] <- (- 2 - sigY ^ 2 + eY ^ 2) / (2 * sigY ^ 2) * d_pYgivXZ[, "d_beta1"] # d2/dbeta1dsigma2
-    ## With respect to beta21, ..., beta2p -----------
-    if (!is.null(z)) {
-      p <- ncol(data.frame(z))
-      for (j in 1:p) {
-        diff <- end_col - start_col
-        start_col <- end_col + 1
-        end_col <- end_col + diff
-        all_d2[, start_col] <- data.frame(z)[, j] ^ 2 * all_d2[, 1] # d2/d2beta2j2
-        if (p > 1) {
-          for (c in 1:(p - j)) {
-            all_d2[, (start_col + c)] <- data.frame(z)[, j] * data.frame(z)[, (c + 1)] * all_d2[, 1]
-          }
-        }
-        all_d2[, end_col] <- (- 2 - sigY ^ 2 + eY ^ 2) / (2 * sigY ^ 2) * d_pYgivXZ[, (2 + j)] # d2/dbeta1dsigma2
-      }
-    }
-    all_d2[, ncol(all_d2)] <- pYgivXZ / ((sigY ^ 2) ^ 2) * (((- sigY ^ 2 + eY ^ 2) / (2 * sigY ^ 2)) + 1) # d2/d2(sigma2)2
-    # ------------------ Calculate partial derivatives
-  }
-  return(all_d2)
-}
-
-second_deriv_pXgivZ <- function(x, z = NULL, distX, eta_params) {
-  if (distX == "normal") {
-    # Get parameters ---------------------------------
-    ## Construct mean --------------------------------
-    meanX <- eta_params[1]
-    if (!is.null(z)) {
-      eta1 <- eta_params[-c(1, length(eta_params))]
-      if (length(eta1) == 1) {
-        meanX <- meanX + eta1 * z
-      } else {
-        meanX <- meanX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-      }
-    }
-    ## Estimate sqrt(variance) directly --------------
-    sigX <- eta_params[length(eta_params)]
-    # --------------------------------- Get parameters
-    # Calculate P(Y|X,Z) -----------------------------
-    eX <- data.matrix(x - meanX)
-    pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
-    # ----------------------------- Calculate P(Y|X,Z)
-    # Calculate partial derivatives ------------------
-    d_pXgivZ <- part_deriv_pXgivZ(x = x, z = z, distX = distX, eta_params = eta_params)
-    # ------------------ Calculate partial derivatives
-    # Calculate second derivatives -------------------
-    num_deriv <- sum(length(eta_params) - 0:(length(eta_params) - 1))
-    all_d2 <- matrix(data = NA, nrow = nrow(pXgivZ), ncol = num_deriv)
-    ## With respect to eta0 --------------------------
-    start_col <- 1
-    end_col <- 2 + ncol(data.frame(z))
-    all_d2[, 1] <- (eX ^ 2 - sigX ^ 2) / ((sigX ^ 2) ^ 2) * pXgivZ # d2/d2eta02
-    # d/dbeta0deta1, ..., d/dbeta0dbetap
-    if (!is.null(z)) {
-      for (c in 1:ncol(data.frame(z))) {
-        all_d2[, (1 + c)] <- data.frame(z)[, c] * all_d2[, 1]
-      }
-    }
-    all_d2[, end_col] <- (- 2 - sigX ^ 2 + eX ^ 2) / (2 * sigX ^ 2) * d_pXgivZ[, 1] # d2/dbeta0dsigma2
-    ## With respect to eta1, ..., etap ---------------
-    if (!is.null(z)) {
-      p <- ncol(data.frame(z))
-      for (j in 1:p) {
-        diff <- end_col - start_col
-        start_col <- end_col + 1
-        end_col <- end_col + diff
-        all_d2[, start_col] <- data.frame(z)[, j] ^ 2 * all_d2[, 1] # d2/d2beta2j2
-        if (p > 1) {
-          for (c in 1:(p - j)) {
-            all_d2[, (start_col + c)] <- data.frame(z)[, j] * data.frame(z)[, (c + 1)] * all_d2[, 1]
-          }
-        }
-        all_d2[, end_col] <- (- 2 - sigX ^ 2 + eX ^ 2) / (2 * sigX ^ 2) * d_pXgivZ[, (1 + j)] # d2/detajdsigma2
-      }
-    }
-    all_d2[, ncol(all_d2)] <- pXgivZ / ((sigX ^ 2) ^ 2) * (((- sigX ^ 2 + eX ^ 2) / (2 * sigX ^ 2)) + 1) # d2/d2(sigma2)2
-    # ------------------ Calculate partial derivatives
-  }
-  return(all_d2)
-}
-
-second_deriv_loglik_wrt_beta <- function(pYgivXZ, d_pYgivXZ, d2_pYgivXZ, dimZ = 0) {
-  # Create matrix to hold double derivatives of loglik -----------------
-  d2_loglik_beta <- matrix(data = 0, nrow = nrow(d2_pYgivXZ), ncol = ncol(d2_pYgivXZ))
-  ## With respect to beta0 /////////////////////////////////////////////
-  start_col <- 1
-  end_col <- 3 + dimZ
-  # d2/d2beta02 of loglik ----------------------------------------------
-  d2_loglik_beta[, 1] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, 1]) / (pYgivXZ ^ 2)
-  # d2/d2beta12 of loglik ----------------------------------------------
-  d2_loglik_beta[, (start_col + 1)] <- (d2_pYgivXZ[, (start_col + 1)] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, 2]) / (pYgivXZ ^ 2)
-  # d2/dbeta0dbeta2, ..., d2/dbeta0dbetap ------------------------------
-  if (dimZ > 0) {
-    for (c in 1:dimZ) {
-      d2_loglik_beta[, (start_col + 1 + c)] <- (d2_pYgivXZ[, (start_col + 2 + c)] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, (2 + c)]) / (pYgivXZ ^ 2)
-    }
-  }
-  # d2/dbeta0dsigma2 of loglik -----------------------------------------
-  d2_loglik_beta[, end_col] <- (d2_pYgivXZ[, end_col] * pYgivXZ - d_pYgivXZ[, 1] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
-  ## ///////////////////////////////////////////// With respect to beta0
-  ## With respect to beta1 /////////////////////////////////////////////
-  diff <- end_col - start_col
-  start_col <- end_col + 1
-  end_col <- end_col + diff
-  # d2/d2beta12 of loglik ----------------------------------------------
-  d2_loglik_beta[, start_col] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, 2]) / (pYgivXZ ^ 2)
-  # d2/dbeta1dbeta2, ..., d2/dbeta1dbetap ------------------------------
-  if (dimZ > 0) {
-    for (c in 1:dimZ) {
-      d2_loglik_beta[, (start_col + c)] <- (d2_pYgivXZ[, (start_col + c)] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, (2 + c)]) / (pYgivXZ ^ 2)
-    }
-  }
-  # d2/dbeta0dsigma2 of loglik -----------------------------------------
-  d2_loglik_beta[, end_col] <- (d2_pYgivXZ[, end_col] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
-  ## ///////////////////////////////////////////// With respect to beta1
-  ## With respect to beta21, ..., beta2p ///////////////////////////////
-  if (dimZ > 0) {
-    for (j in 1:dimZ) {
-      diff <- end_col - start_col
-      start_col <- end_col + 1
-      end_col <- end_col + diff
-      # d2/d2betaj2 of loglik ----------------------------
-      d2_loglik_beta[, start_col] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, (2 + j)]) / (pYgivXZ ^ 2)
-      if (p > 1) {
-        for (c in 1:(p - j)) {
-          d2_loglik_beta[, (start_col + j)] <- (d2_pYgivXZ[, (start_col + j)] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, (2 + j + c)]) / (pYgivXZ ^ 2)
-        }
-      }
-      # d2/dbetajdsigma2 of loglik -----------------------
-      d2_loglik_beta[, end_col] <- (d2_pYgivXZ[, end_col] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
-    }
-  }
-  ## /////////////////////////////// With respect to beta21, ..., beta2p
-  ## With respect to sigma2 ////////////////////////////////////////////
-  # d2/d2sigma22 of loglik ---------------------------
-  d2_loglik_beta[, ncol(d2_loglik_beta)] <- (d2_pYgivXZ[, ncol(d2_pYgivXZ)] * pYgivXZ - d_pYgivXZ[, ncol(d_pYgivXZ)] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
-  ## //////////////////////////////////////////// With respect to sigma2
-  return(d2_loglik_beta)
-}
-
-second_deriv_loglik <- function(d_theta, params, Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
-  ####################################################
-  # Pre-processing ###################################
-  ####################################################
-  # Subset data to relevant, user-specified columns --
-  data <- data[, c(Y, W, D, Z)]
-  # Create variable X = W ----------------------------
-  data <- cbind(data, X = data[, W])
-  ## Make it NA for censored (D = 0) -----------------
-  data[data[, D] == 0, "X"] <- NA
-  ## < define predictor column name > ----------------
-  X <- "X"
-  ## ---------------- < define predictor column name >
-  # < number of uncensored subjects > ----------------
-  n1 <- sum(data[, D]) # -----------------------------
-  # ---------------- < number of uncensored subjects >
-  # Reordered data to be uncensored first ------------
-  data <- data[order(data[, D], decreasing = TRUE), ]
-  # ------------ Reordered data to be uncensored first
-  # Create subset of uncensored subjects' data -------
-  uncens_data <- data[1:n1, ]
-  # ------- Create subset of uncensored subjects' data
-  # Create subset of censored subjects' data ---------
-  cens_data <- data[-c(1:n1), ]
-  # --------- Create subset of censored subjects' data
-  ####################################################
-  # Derivatives of uncensored ########################
-  ####################################################
-  # Analysis model P(Y|X,Z) ##########################
-  if (distY == "normal") {
-    # Subset parameters ------------------------------
-    beta_params <- params[1:(3 + length(Z))]
-    # ------------------------------ Subset parameters
-  } else if (distY == "binomial") {
-    # Subset parameters ------------------------------
-    beta_params <- params[1:(2 + length(Z))]
-    # ------------------------------ Subset parameters
-  }
-  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
-  d_pYgivXZ <- d_theta[1:n1, 1:length(beta_params)]
-  d2_pYgivXZ <- second_deriv_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
-  d2_loglik_beta <- second_deriv_loglik_wrt_beta(pYgivXZ = pYgivXZ, d_pYgivXZ = d_pYgivXZ, d2_pYgivXZ = d2_pYgivXZ, dimZ = length(Z))
-  # Predictor model P(X|Z) ###########################
-  # Subset parameters --------------------------------
-  eta_params <- params[-c(1:length(beta_params))]
-  # -------------------------------- Subset parameters
-  pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  d_pXgivZ <- d_theta[1:n1, - c(1:length(beta_params))]
-  d2_pXgivZ <- second_deriv_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  ## Create matrix to hold double derivatives --------
-  ## of loglik ---------------------------------------
-  d2_loglik_eta <- matrix(data = 0, nrow = nrow(d2_pXgivZ), ncol = ncol(d2_pXgivZ))
-  ## With respect to beta0 ---------------------------
-  start_col <- 1
-  end_col <- (2 + ncol(data.frame(z)))
-  # d2/d2eta02 of loglik -----------------------------
-  d2_loglik_eta[, start_col] <- (d2_pXgivZ[, start_col] * pXgivZ - d_pXgivZ[, 1] * d_pXgivZ[, 1]) / (pXgivZ ^ 2)
-  if (!is.null(z)) {
-    # d2/deta0deta1, ..., d2/deta0detap --------------
-    for (c in 1:ncol(data.frame(z))) {
-      d2_loglik_eta[, (start_col + c)] <- (d2_pXgivZ[, (start_col + c)] * pXgivZ - d_pXgivZ[, 1] * d_pXgivZ[, (1 + c)]) / (pXgivZ ^ 2)
-    }
-  }
-  # d2/deta0dsigma2 of loglik ------------------------
-  d2_loglik_eta[, end_col] <- (d2_pXgivZ[, end_col] * pXgivZ - d_pXgivZ[, 1] * d_pXgivZ[, ncol(d_pXgivZ)]) / (pXgivZ ^ 2)
-  ## With respect to beta1 ---------------------------
-  start_col <- (3 + c) + 1
-  end_col <- 2 * (3 + c) - 1
-  # d2/d2beta12 of loglik ----------------------------
-  d2_loglik_beta[, start_col] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, 2]) / (pYgivXZ ^ 2)
-  # d2/dbeta1dbeta2, ..., d2/dbeta1dbetap ------------
-  if (!is.null(z)) {
-    for (c in 1:ncol(data.frame(z))) {
-      # d2/d2betaj2 of loglik
-      d2_loglik_beta[, (start_col + c)] <- (d2_pYgivXZ[, (start_col + c)] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, (2 + c)]) / (pYgivXZ ^ 2)
-    }
-    # d2/dbeta0dsigma2 of loglik
-    d2_loglik_beta[, (start_col + c + 1)] <- (d2_pYgivXZ[, (2 + c)] * pYgivXZ - d_pYgivXZ[, 2] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
-  }
-  ## With respect to beta21, ..., beta2p -----------
-  if (!is.null(z)) {
-    p <- ncol(data.frame(z))
+calc_deriv_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, j = NULL) {
+  p <- length(mle)
+  hn <- nrow(data) ^ (- 1 / 2)
+  # Calculate the log-likelihood contributions at the MLE
+  l <- calc_indiv_loglik(params = mle, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+  if (is.null(j)) {
+    # Create matrix to save
+    d_theta <- matrix(data = - l, nrow = nrow(data), ncol = p, byrow = FALSE)
     for (j in 1:p) {
-      diff <- end_col - start_col
-      start_col <- end_col + 1
-      end_col <- end_col + diff
-      # d2/d2betaj2 of loglik ----------------------------
-      d2_loglik_beta[, start_col] <- (d2_pYgivXZ[, start_col] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, (2 + j)]) / (pYgivXZ ^ 2)
-      if (p > 1) {
-        for (c in 1:(p - j)) {
-          d2_loglik_beta[, (start_col + j)] <- (d2_pYgivXZ[, (start_col + j)] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, (2 + j + c)]) / (pYgivXZ ^ 2)
+      ej <- matrix(data = 0, nrow = p, ncol = 1)
+      ej[j] <- 1
+      mle_ <- matrix(data = mle + ej, nrow = p, ncol = 1)
+      l_ <- calc_indiv_loglik(params = mle_, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+      d_theta[, j] <- d_theta[, j] + l_
+    }
+    d_theta <- 1 / hn * d_theta
+  } else {
+    # Create matrix to save
+    d_theta <- matrix(data = - l, nrow = nrow(data), ncol = 1, byrow = FALSE)
+    ej <- matrix(data = 0, nrow = p, ncol = 1)
+    ej[j] <- 1
+    mle_ <- matrix(data = mle + ej, nrow = p, ncol = 1)
+    l_ <- calc_indiv_loglik(params = mle_, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+    d_theta[, j] <- d_theta[, j] + l_
+    d_theta <- 1 / hn * d_theta
+  }
+  return(d_theta)
+}
+
+calc_deriv2_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, j = NULL, k = NULL) {
+  p <- length(mle)
+  hn <- nrow(data) ^ (- 1 / 2)
+  # Calculate the log-likelihood contributions at the MLE
+  l <- calc_indiv_loglik(params = mle, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+  if (is.null(j)) {
+    if (!is.null(k)) {
+      # Create matrix to save
+      d_theta <- matrix(data = l, nrow = nrow(data), ncol = p, byrow = FALSE)
+      # Perturb kth element of mle
+      ek <- matrix(data = 0, nrow = p, ncol = 1)
+      ek[k] <- 1
+      mle_k <- matrix(data = mle + ek, nrow = p, ncol = 1)
+      l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+      for (j in 1:p) {
+        ej <- matrix(data = 0, nrow = p, ncol = 1)
+        ej[j] <- 1
+        mle_j <- matrix(data = mle + ej, nrow = p, ncol = 1)
+        mle_jk <- matrix(data = mle + ej + ek, nrow = p, ncol = 1)
+        l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+        l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+        d_theta[, j] <- d_theta[, j] + l_jk - l_j - l_k
+      }
+      d_theta <- 1 / (hn ^ 2) * d_theta
+    } else {
+      for (k in 1:p) {
+        # Create matrix to save
+        d_theta_k <- matrix(data = l, nrow = nrow(data), ncol = p, byrow = FALSE)
+        # Perturb kth element of mle
+        ek <- matrix(data = 0, nrow = p, ncol = 1)
+        ek[k] <- 1
+        mle_k <- matrix(data = mle + ek, nrow = p, ncol = 1)
+        l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+        for (j in 1:p) {
+          ej <- matrix(data = 0, nrow = p, ncol = 1)
+          ej[j] <- 1
+          mle_j <- matrix(data = mle + ej, nrow = p, ncol = 1)
+          mle_jk <- matrix(data = mle + ej + ek, nrow = p, ncol = 1)
+          l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+          l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+          d_theta_k[, j] <- d_theta_k[, j] + l_jk - l_j - l_k
+        }
+        if (k > 1) {
+          d_theta <- cbind(d_theta, d_theta_k)
+        } else {
+          d_theta <- d_theta_k
         }
       }
-      # d2/dbetajdsigma2 of loglik -----------------------
-      d2_loglik_beta[, end_col] <- (d2_pYgivXZ[, (start_col + c + 1)] * pYgivXZ - d_pYgivXZ[, (2 + j)] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
+      d_theta <- 1 / (hn ^ 2) * d_theta
     }
+  } else {
+    # Create matrix to save
+    d_theta <- matrix(data = l, nrow = nrow(data), ncol = 1, byrow = FALSE)
+    ej <- ek <- matrix(data = 0, nrow = p, ncol = 1)
+    ej[j] <- 1
+    ek[k] <- 1
+    mle_j <- matrix(data = mle + ej, nrow = p, ncol = 1) + ej
+    mle_k <- matrix(data = mle + ej, nrow = p, ncol = 1) + ek
+    mle_jk <- matrix(data = mle + ej, nrow = p, ncol = 1) + ej + ek
+    l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+    l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+    l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+    d_theta[, j] <- d_theta[, j] + l_jk - l_j - l_k
+    d_theta <- 1 / (hn ^ 2) * d_theta
   }
-  # d2/d2sigma22 of loglik ---------------------------
-  d2_loglik_beta[, ncol(d2_loglik_beta)] <- (d2_pYgivXZ[, ncol(d2_pYgivXZ)] * pYgivXZ - d_pYgivXZ[, ncol(d_pYgivXZ)] * d_pYgivXZ[, ncol(d_pYgivXZ)]) / (pYgivXZ ^ 2)
-
-  # Return deriv beta and eta side-by-side ----------
-  d_loglik <- cbind(d_loglik_beta, d_loglik_eta)
-  # ---------- Return deriv beta and eta side-by-side
-  ####################################################
-  # Derivatives of censored ##########################
-  ####################################################
-  # Integrate over joint P(Y,X,Z) --------------------
-  dim_params <- length(c(beta_params, eta_params))
-  joint_dens <- function(x, Yi, Zi) {
-    ####################################################
-    # Analysis model P(Y|X,Z) ##########################
-    ####################################################
-    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
-
-    ####################################################
-    # Predictor model P(X|Z) ###########################
-    ####################################################
-    pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
-
-    ####################################################
-    # Joint density P(Y,X,Z) ###########################
-    ####################################################
-    return(pYgivXZ * pXgivZ)
-  }
-  integrate_joint_dens <- function(data_row) {
-    data_row <- data.frame(t(data_row))
-    return(
-      tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
-                                Yi = data_row[Y], Zi = data_row[, Z])$value,
-               error = function(err) {0})
-    )
-  }
-  integral_joint <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
-  integral_joint_wide <- matrix(data = rep(integral_joint, each = dim_params), ncol = dim_params, byrow = TRUE)
-  # -------------------- Integrate over joint P(Y,X,Z)
-  # Integrate over partial derivative ----------------
-  part_deriv_joint_dens <- function(x, Yi, Zi, col = NULL) {
-    ####################################################
-    # Analysis model P(Y|X,Z) ##########################
-    ####################################################
-    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
-    d_pYgivXZ <- part_deriv_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
-    ####################################################
-    # Predictor model P(X|Z) ###########################
-    ####################################################
-    pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
-    d_pXgivZ <- part_deriv_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
-    ####################################################
-    # Partial derivatives ##############################
-    ####################################################
-    d_pYXZ <- cbind(d_pYgivXZ * matrix(data = pXgivZ, nrow = length(pXgivZ), ncol = ncol(d_pYgivXZ), byrow = FALSE),
-                    matrix(data = pYgivXZ, nrow = length(pYgivXZ), ncol = ncol(d_pXgivZ), byrow = FALSE) * d_pXgivZ)
-    if (!is.null(col)) {
-      return(d_pYXZ[, col])
-    } else {
-      return(d_pYXZ)
-    }
-  }
-  integrate_part_deriv_joint_dens <- function(data_row) {
-    data_row <- data.frame(t(data_row))
-    return_mat <- matrix(data = NA, nrow = 1, ncol = dim_params)
-    for (col in 1:ncol(return_mat)) {
-      return_mat[, col] <- tryCatch(expr = integrate(f = part_deriv_joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
-                                                     Yi = data_row[Y], Zi = data_row[, Z], col = col)$value,
-                                    error = function(err) {0})
-    }
-    return(return_mat)
-  }
-  integral_d_loglik <- t(apply(X = cens_data, MARGIN = 1, FUN = integrate_part_deriv_joint_dens))
-  # ---------------- Integrate over partial derivative
-  # Divide integral of deriv by integral of P(Y,X,Z) -
-  d_loglik <- rbind(d_loglik, integral_d_loglik / integral_joint_wide)
-  # - Divide integral of deriv by integral of P(Y,X,Z)
-  # Return matrix of derivatives ---------------------
-  return(d_loglik)
-  # --------------------- Return matrix of derivatives
+  return(d_theta)
 }
