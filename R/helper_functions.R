@@ -342,35 +342,6 @@ calc_deriv_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "no
   return(d_theta)
 }
 
-calc_deriv_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, j = NULL) {
-  p <- length(mle)
-  hn <- nrow(data) ^ (- 1 / 2)
-  # Calculate the log-likelihood contributions at the MLE
-  l <- calc_indiv_loglik(params = mle, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-  if (is.null(j)) {
-    # Create matrix to save
-    d_theta <- matrix(data = - l, nrow = nrow(data), ncol = p, byrow = FALSE)
-    for (j in 1:p) {
-      ej <- matrix(data = 0, nrow = p, ncol = 1)
-      ej[j] <- 1
-      mle_ <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
-      l_ <- calc_indiv_loglik(params = mle_, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-      d_theta[, j] <- d_theta[, j] + l_
-    }
-    d_theta <- (1 / hn) * d_theta
-  } else {
-    # Create matrix to save
-    d_theta <- matrix(data = - l, nrow = nrow(data), ncol = 1, byrow = FALSE)
-    ej <- matrix(data = 0, nrow = p, ncol = 1)
-    ej[j] <- 1
-    mle_ <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
-    l_ <- calc_indiv_loglik(params = mle_, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-    d_theta[, j] <- d_theta[, j] + l_
-    d_theta <- (1 / hn) * d_theta
-  }
-  return(d_theta)
-}
-
 calc_deriv2_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, j = NULL, k = NULL) {
   p <- length(mle)
   hn <- nrow(data) ^ (- 1 / 2)
