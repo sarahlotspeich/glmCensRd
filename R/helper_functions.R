@@ -308,7 +308,7 @@ calc_deriv_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "no
     for (j in 1:p) {
       ej <- matrix(data = 0, nrow = p, ncol = 1)
       ej[j] <- 1
-      mle_ <- matrix(data = mle + ej, nrow = p, ncol = 1)
+      mle_ <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
       l_ <- calc_indiv_loglik(params = mle_, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
       d_theta[, j] <- d_theta[, j] + l_
     }
@@ -318,7 +318,7 @@ calc_deriv_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "no
     d_theta <- matrix(data = - l, nrow = nrow(data), ncol = 1, byrow = FALSE)
     ej <- matrix(data = 0, nrow = p, ncol = 1)
     ej[j] <- 1
-    mle_ <- matrix(data = mle + ej, nrow = p, ncol = 1)
+    mle_ <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
     l_ <- calc_indiv_loglik(params = mle_, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
     d_theta[, j] <- d_theta[, j] + l_
     d_theta <- 1 / hn * d_theta
@@ -338,13 +338,13 @@ calc_deriv2_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "n
       # Perturb kth element of mle
       ek <- matrix(data = 0, nrow = p, ncol = 1)
       ek[k] <- 1
-      mle_k <- matrix(data = mle + ek, nrow = p, ncol = 1)
+      mle_k <- matrix(data = mle + hn * ek, nrow = p, ncol = 1)
       l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
       for (j in 1:p) {
         ej <- matrix(data = 0, nrow = p, ncol = 1)
         ej[j] <- 1
-        mle_j <- matrix(data = mle + ej, nrow = p, ncol = 1)
-        mle_jk <- matrix(data = mle + ej + ek, nrow = p, ncol = 1)
+        mle_j <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
+        mle_jk <- matrix(data = mle + hn * ej + hn * ek, nrow = p, ncol = 1)
         l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
         l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
         d_theta[, j] <- d_theta[, j] + l_jk - l_j - l_k
@@ -357,13 +357,13 @@ calc_deriv2_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "n
         # Perturb kth element of mle
         ek <- matrix(data = 0, nrow = p, ncol = 1)
         ek[k] <- 1
-        mle_k <- matrix(data = mle + ek, nrow = p, ncol = 1)
+        mle_k <- matrix(data = mle + hn * ek, nrow = p, ncol = 1)
         l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
         for (j in 1:p) {
           ej <- matrix(data = 0, nrow = p, ncol = 1)
           ej[j] <- 1
-          mle_j <- matrix(data = mle + ej, nrow = p, ncol = 1)
-          mle_jk <- matrix(data = mle + ej + ek, nrow = p, ncol = 1)
+          mle_j <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
+          mle_jk <- matrix(data = mle + hn * ej + hn * ek, nrow = p, ncol = 1)
           l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
           l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
           d_theta_k[, j] <- d_theta_k[, j] + l_jk - l_j - l_k
@@ -382,9 +382,9 @@ calc_deriv2_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "n
     ej <- ek <- matrix(data = 0, nrow = p, ncol = 1)
     ej[j] <- 1
     ek[k] <- 1
-    mle_j <- matrix(data = mle + ej, nrow = p, ncol = 1) + ej
-    mle_k <- matrix(data = mle + ej, nrow = p, ncol = 1) + ek
-    mle_jk <- matrix(data = mle + ej, nrow = p, ncol = 1) + ej + ek
+    mle_j <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
+    mle_k <- matrix(data = mle + hn * ek, nrow = p, ncol = 1)
+    mle_jk <- matrix(data = mle + hn * ej + hn * ek, nrow = p, ncol = 1)
     l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
     l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
     l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
