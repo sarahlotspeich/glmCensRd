@@ -50,13 +50,14 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
   )
   param_est <- mod$estimate
 
-  # Sandwich covariance estimator
+  # Derivatives of the log-likelihood
   first_deriv <- calc_deriv_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
                                    partX = partX, distY = distY, distX = distX, data = data, j = NULL)
 
   second_deriv <- calc_deriv2_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
-                                     partX = partX, distY = distY, distX = distX, data = data, j = NULL)
+                                     partX = partX, distY = distY, distX = distX, data = data, j = NULL, k = NULL)
 
+  # Sandwich covariance estimator
   ## Sandwich meat
   rep_each <- first_deriv[, rep(x = 1:ncol(first_deriv), each = length(param_est))]
   rep_times <- first_deriv[, rep(x = 1:ncol(first_deriv), times = length(param_est))]
