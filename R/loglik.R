@@ -137,6 +137,9 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
   ll <- ll + sum(log_integral)
   # -------- Log-likelihood contribution of censored X
   # Return (-1) x log-likelihood for use with nlm() --
-  return(- ll)
+  # return(- ll)
   # -- Return (-1) x log-likelihood for use with nlm()
+  # Return log-likelihood for use with nlm() ---------
+  return(ll)
+  # --------- Return log-likelihood for use with nlm()
 }
