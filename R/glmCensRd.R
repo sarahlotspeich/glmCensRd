@@ -17,7 +17,6 @@
 #' \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 #'
 #' @export
-#' @importFrom maxLik maxLik
 #'
 glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, steptol = 1e-4, iterlim = 100) {
   # Subset data to relevant, user-specified columns
