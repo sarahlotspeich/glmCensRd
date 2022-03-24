@@ -328,7 +328,8 @@ calc_deriv2_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "n
   eps <- mle * (10 ^ (- 4))
 
   # Create matrix to save derivatives in
-  d_theta <- matrix(data = 0, nrow = nrow(data), ncol = p, byrow = FALSE)
+  d_theta <- matrix(data = 0, nrow = nrow(data), ncol = p ^ 2, byrow = FALSE)
+  start_col <- 1
   for (j in 1:p) {
     # Create jth euclidean vector
     ej <- matrix(data = 0, nrow = p, ncol = 1)
@@ -336,94 +337,16 @@ calc_deriv2_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "n
 
     # MLE - eps
     mle0 <- matrix(data = mle - eps * ej, nrow = p, ncol = 1)
-    l0 <- calc_indiv_loglik(params = mle0, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+    d_l0 <- calc_deriv_loglik(mle = mle0, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
 
     # MLE + eps
     mle1 <- matrix(data = mle + eps * ej, nrow = p, ncol = 1)
-    l1 <- calc_indiv_loglik(params = mle1, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+    d_l1 <- calc_deriv_loglik(mle = mle1, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
 
-    # Estimate deriv = (l(beta + eps) - l(beta - eps)) / (2 * eps)
-    d_theta[, j] <- (l1 - l0) / (2 * eps[j])
+    # Estimate deriv = (l'(beta + eps) - l'(beta - eps)) / (2 * eps)
+    d_theta[, start_col:(start_col + (p - 1))] <- (d_l1 - d_l0) / (2 * eps[j])
+    start_col <- start_col + p
   }
 
-  return(d_theta)
-}
-
-calc_deriv2_loglik <- function(mle, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, j = NULL, k = NULL) {
-  p <- length(mle)
-  eps <- mle * (10 ^ (- 4))
-
-  if (is.null(j)) {
-    if (!is.null(k)) {
-      # Create matrix to save derivatives in
-      d_theta <- matrix(data = 0, nrow = nrow(data), ncol = p, byrow = FALSE)
-
-      # Create kth euclidean vector
-      ek <- matrix(data = 0, nrow = p, ncol = 1)
-      ek[k] <- 1
-      mle_k <- matrix(data = mle + hn * ek, nrow = p, ncol = 1)
-      l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-      for (j in 1:p) {
-        ej <- matrix(data = 0, nrow = p, ncol = 1)
-        ej[j] <- 1
-        mle_j <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
-        mle_jk <- matrix(data = mle + hn * ej + hn * ek, nrow = p, ncol = 1)
-        l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-        l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-        d_theta[, j] <- d_theta[, j] + l_jk - l_j - l_k
-      }
-
-      # MLE - eps
-      mle0 <- matrix(data = mle - eps * ej, nrow = p, ncol = 1)
-      l0 <- calc_indiv_loglik(params = mle0, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-
-      # MLE + eps
-      mle1 <- matrix(data = mle + eps * ej, nrow = p, ncol = 1)
-      l1 <- calc_indiv_loglik(params = mle1, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-
-      # Estimate deriv = (l(beta + eps) - l(beta - eps)) / (2 * eps)
-      d_theta[, j] <- (l1 - l0) / (2 * eps[j])
-
-    } else {
-      for (k in 1:p) {
-        # Create matrix to save
-        d_theta_k <- matrix(data = l, nrow = nrow(data), ncol = p, byrow = FALSE)
-        # Perturb kth element of mle
-        ek <- matrix(data = 0, nrow = p, ncol = 1)
-        ek[k] <- 1
-        mle_k <- matrix(data = mle + hn * ek, nrow = p, ncol = 1)
-        l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-        for (j in 1:p) {
-          ej <- matrix(data = 0, nrow = p, ncol = 1)
-          ej[j] <- 1
-          mle_j <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
-          mle_jk <- matrix(data = mle + hn * ej + hn * ek, nrow = p, ncol = 1)
-          l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-          l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-          d_theta_k[, j] <- d_theta_k[, j] + l_jk - l_j - l_k
-        }
-        if (k > 1) {
-          d_theta <- cbind(d_theta, d_theta_k)
-        } else {
-          d_theta <- d_theta_k
-        }
-      }
-      d_theta <- (1 / (hn ^ 2)) * d_theta
-    }
-  } else {
-    # Create matrix to save
-    d_theta <- matrix(data = l, nrow = nrow(data), ncol = 1, byrow = FALSE)
-    ej <- ek <- matrix(data = 0, nrow = p, ncol = 1)
-    ej[j] <- 1
-    ek[k] <- 1
-    mle_j <- matrix(data = mle + hn * ej, nrow = p, ncol = 1)
-    mle_k <- matrix(data = mle + hn * ek, nrow = p, ncol = 1)
-    mle_jk <- matrix(data = mle + hn * ej + hn * ek, nrow = p, ncol = 1)
-    l_j <- calc_indiv_loglik(params = mle_j, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-    l_k <- calc_indiv_loglik(params = mle_k, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-    l_jk <- calc_indiv_loglik(params = mle_jk, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-    d_theta[, j] <- d_theta[, j] + l_jk - l_j - l_k
-    d_theta <- (1 / (hn ^ 2)) * d_theta
-  }
   return(d_theta)
 }
