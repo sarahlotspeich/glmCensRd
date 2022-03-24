@@ -17,6 +17,7 @@
 #' \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 #'
 #' @export
+#' @importFrom maxLik maxLik
 #'
 glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, steptol = 1e-4, iterlim = 100) {
   # Subset data to relevant, user-specified columns
@@ -28,12 +29,12 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
   ## Define column X variable name
   X <- "X"
 
+  # Initial parameter values
   if (distY == "normal") {
     params0 <- c(rep(0, length(c(1, X, Z))), var(data[, Y]))
   } else if (distY == "binomial") {
     params0 <- c(rep(0, length(c(1, X, Z))))
   }
-
   if (distX %in% c("normal", "log-normal")) {
     params0 <- c(params0, rep(0, length(c(1, Z))), var(data[, X], na.rm = TRUE))
   } else if (distX %in% c('gamma', "inverse-gaussian")) {
@@ -49,13 +50,14 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
                Y = Y, X = X, D = D, W = W, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
   )
   param_est <- mod$estimate
+  #param_cov <- solve(mod$hessian)
 
   # Derivatives of the log-likelihood
   first_deriv <- calc_deriv_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
-                                   partX = partX, distY = distY, distX = distX, data = data, j = NULL)
+                                   partX = partX, distY = distY, distX = distX, data = data)
 
   second_deriv <- calc_deriv2_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
-                                     partX = partX, distY = distY, distX = distX, data = data, j = NULL, k = NULL)
+                                     partX = partX, distY = distY, distX = distX, data = data)
 
   # Sandwich covariance estimator
   ## Sandwich meat
@@ -75,8 +77,9 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
               byrow = TRUE)
 
   ## Sandwich covariance
-  param_cov <- solve(A) %*% B %*% t(solve(A))
-  param_se <- sqrt(diag(param_cov))
+  n <- nrow(data)
+  param_cov <- (solve(A) %*% B %*% t(solve(A)))
+  param_se <- sqrt(diag(param_cov)) / sqrt(n)
 
   ####################################################
   # Analysis model P(Y|X,Z) ##########################
