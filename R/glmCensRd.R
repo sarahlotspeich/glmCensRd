@@ -8,6 +8,7 @@
 #' @param data A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.
 #' @param distY Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.
 #' @param distX Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.
+#' @param estSE If \code{TRUE}, robust sandwich estimators of parameter standard errors are included in the output. Default is \code{FALSE}.
 #' @param steptol (Fed to \code{nlm()}) A positive scalar providing the minimum allowable relative step length. Default is \code{1e-4}.
 #' @param iterlim (Fed to \code{nlm()}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
 #'
@@ -18,7 +19,7 @@
 #'
 #' @export
 #'
-glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data, steptol = 1e-4, iterlim = 100) {
+glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", distX = "normal", estSE = FALSE, steptol = 1e-4, iterlim = 100) {
   # Subset data to relevant, user-specified columns
   data <- data[, c(Y, W, D, Z)]
   # Create variable X = W
@@ -34,6 +35,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
   } else if (distY == "binomial") {
     params0 <- c(rep(0, length(c(1, X, Z))))
   }
+
   if (distX %in% c("normal", "log-normal")) {
     params0 <- c(params0, rep(0, length(c(1, Z))), var(data[, X], na.rm = TRUE))
   } else if (distX %in% c('gamma', "inverse-gaussian")) {
@@ -49,36 +51,39 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, distY = "normal", distX = "
                Y = Y, X = X, D = D, W = W, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
   )
   param_est <- mod$estimate
-  #param_cov <- solve(mod$hessian)
 
-  # Derivatives of the log-likelihood
-  first_deriv <- calc_deriv_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
-                                   partX = partX, distY = distY, distX = distX, data = data)
-
-  second_deriv <- calc_deriv2_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
+  if (estSE) {
+    # Derivatives of the log-likelihood
+    first_deriv <- calc_deriv_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
                                      partX = partX, distY = distY, distX = distX, data = data)
 
-  # Sandwich covariance estimator
-  ## Sandwich meat
-  rep_each <- first_deriv[, rep(x = 1:ncol(first_deriv), each = length(param_est))]
-  rep_times <- first_deriv[, rep(x = 1:ncol(first_deriv), times = length(param_est))]
-  entriesB <- colMeans(x = rep_each * rep_times)
-  B <- matrix(data = entriesB,
-              nrow = length(param_est),
-              ncol = length(param_est),
-              byrow = TRUE)
+    second_deriv <- calc_deriv2_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
+                                       partX = partX, distY = distY, distX = distX, data = data)
 
-  ## Sandwich bread
-  entriesA <- colMeans(x = second_deriv)
-  A <- matrix(data = entriesA,
-              nrow = length(param_est),
-              ncol = length(param_est),
-              byrow = TRUE)
+    # Sandwich covariance estimator
+    ## Sandwich meat
+    rep_each <- first_deriv[, rep(x = 1:ncol(first_deriv), each = length(param_est))]
+    rep_times <- first_deriv[, rep(x = 1:ncol(first_deriv), times = length(param_est))]
+    entriesB <- colMeans(x = rep_each * rep_times)
+    B <- matrix(data = entriesB,
+                nrow = length(param_est),
+                ncol = length(param_est),
+                byrow = TRUE)
 
-  ## Sandwich covariance
-  n <- nrow(data)
-  param_cov <- (solve(A) %*% B %*% t(solve(A)))
-  param_se <- sqrt(diag(param_cov)) / sqrt(n)
+    ## Sandwich bread
+    entriesA <- colMeans(x = second_deriv)
+    A <- matrix(data = entriesA,
+                nrow = length(param_est),
+                ncol = length(param_est),
+                byrow = TRUE)
+
+    ## Sandwich covariance
+    n <- nrow(data)
+    param_cov <- (solve(A) %*% B %*% t(solve(A)))
+    param_se <- sqrt(diag(param_cov)) / sqrt(n)
+  } else {
+    param_se <- rep(NA, length(param_est))
+  }
 
   ####################################################
   # Analysis model P(Y|X,Z) ##########################

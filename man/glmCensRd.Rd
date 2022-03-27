@@ -10,9 +10,10 @@ glmCensRd(
   D,
   Z = NULL,
   partX = 50,
+  data,
   distY = "normal",
   distX = "normal",
-  data,
+  estSE = FALSE,
   steptol = 1e-04,
   iterlim = 100
 )
@@ -28,11 +29,13 @@ glmCensRd(
 
 \item{partX}{Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.}
 
+\item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
+
 \item{distY}{Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.}
 
 \item{distX}{Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.}
 
-\item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
+\item{estSE}{If \code{TRUE}, robust sandwich estimators of parameter standard errors are included in the output. Default is \code{FALSE}.}
 
 \item{steptol}{(Fed to \code{nlm()}) A positive scalar providing the minimum allowable relative step length. Default is \code{1e-4}.}
 
