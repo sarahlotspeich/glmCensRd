@@ -9,9 +9,9 @@
 #' @param partX Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.
 #' @param distY Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.
 #' @param distX Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.
-#' @param data A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{D}, and \code{Z}.
+#' @param data A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{D}, and \code{Z} (if applicable).
 #' @export
-#' @return A vector containing the approximate integral over the joint density of censored subjects from \code{complete_data_cens}.
+#' @return A scalar of the log-likelihood function (negated for use with \code{nlm}()).
 #'
 loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
   ####################################################
