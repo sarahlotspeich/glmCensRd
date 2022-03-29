@@ -27,11 +27,11 @@ calc_deriv2_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY =
 
     # params - eps
     params0 <- matrix(data = params - eps * ej, nrow = p, ncol = 1)
-    d_l0 <- calc_deriv_loglik(params = params0, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+    d_l0 <- calc_deriv_loglik(params = params0, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
 
     # params + eps
     params1 <- matrix(data = params + eps * ej, nrow = p, ncol = 1)
-    d_l1 <- calc_deriv_loglik(params = params1, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
+    d_l1 <- calc_deriv_loglik(params = params1, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
 
     # Estimate deriv = (l'(beta + eps) - l'(beta - eps)) / (2 * eps)
     d_theta[, start_col:(start_col + (p - 1))] <- (d_l1 - d_l0) / (2 * eps[j])
