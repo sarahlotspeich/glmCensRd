@@ -1,4 +1,4 @@
-#' Calculate the first derivatives of the individual observations' log-likelihood contributions 
+#' Calculate the first derivatives of the individual observations' log-likelihood contributions
 #'
 #' @param params Parameter values.
 #' @param Y Name of outcome variable.
@@ -16,25 +16,25 @@
 calc_deriv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", distX = "normal", data) {
   p <- length(params)
   eps <- params * (10 ^ (- 4))
-  
+
   # Create matrix to save derivatives in
   d_theta <- matrix(data = 0, nrow = nrow(data), ncol = p, byrow = FALSE)
   for (j in 1:p) {
     # Create jth euclidean vector
     ej <- matrix(data = 0, nrow = p, ncol = 1)
     ej[j] <- 1
-    
+
     # params - eps
     params0 <- matrix(data = params - eps * ej, nrow = p, ncol = 1)
-    l0 <- calc_indiv_loglik(params = params0, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-    
+    l0 <- calc_indiv_loglik(params = params0, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
+
     # params + eps
     params1 <- matrix(data = params + eps * ej, nrow = p, ncol = 1)
-    l1 <- calc_indiv_loglik(params = params1, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distX, distX = distX, data = data)
-    
+    l1 <- calc_indiv_loglik(params = params1, Y = Y, X = X, W = W, D = D, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
+
     # Estimate deriv = (l(beta + eps) - l(beta - eps)) / (2 * eps)
     d_theta[, j] <- (l1 - l0) / (2 * eps[j])
   }
-  
+
   return(d_theta)
 }
