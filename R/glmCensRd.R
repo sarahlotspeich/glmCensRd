@@ -47,7 +47,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
   }
 
   suppressWarnings(
-    mod <- nlm(f = loglik, p = params0, steptol = steptol, iterlim = iterlim, hessian = TRUE,
+    mod <- nlm(f = loglik, p = params0, steptol = steptol, iterlim = iterlim, hessian = FALSE,
                Y = Y, X = X, D = D, W = W, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
   )
   param_est <- mod$estimate
