@@ -1,10 +1,10 @@
-#' Calculate P(Y|X,Z) 
+#' Calculate P(Y|X,Z)
 #'
 #' @param y Outcome values (scalar or vector).
 #' @param x Predictor values (scalar or vector).
 #' @param z Covariate values (scalar, vector, or dataframe).
 #' @param distY Distribution assumed for \code{y} given \code{x} and \code{z}.
-#' @param beta_params Vector of model parameters. 
+#' @param beta_params Vector of model parameters.
 #'
 #' @return A scalar or numeric vector the same length as the data input
 #'
@@ -30,7 +30,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     # Calculate --------------------------------------
     #eY <- as.numeric(y) - meanY
     #pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
-    pYgivXZ <- dnorm(x = y, mean = meanY, sd = sigY)
+    pYgivXZ <- dnorm(x = as.numeric(y), mean = meanY, sd = sigY)
     # -------------------------------------- Calculate
   } else if (distY == "binomial") {
     # Get parameters ---------------------------------
@@ -47,7 +47,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
     #pYgivXZ <- exp(- (1 - y) * meanY) / (1 + exp(meanY))
-    pYgivXZ <- dbinom(x = y, size = 1, prob = 1 / (1 + exp(- meanY)))
+    pYgivXZ <- dbinom(x = as.numeric(y), size = 1, prob = 1 / (1 + exp(- meanY)))
     # -------------------------------------- Calculate
   }
   return(pYgivXZ)
