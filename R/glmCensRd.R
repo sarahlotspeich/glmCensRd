@@ -54,10 +54,10 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
 
   if (estSE) {
     # Derivatives of the log-likelihood
-    first_deriv <- calc_deriv_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
+    first_deriv <- calc_deriv_loglik(params = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
                                      partX = partX, distY = distY, distX = distX, data = data)
 
-    second_deriv <- calc_deriv2_loglik(mle = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
+    second_deriv <- calc_deriv2_loglik(params = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
                                        partX = partX, distY = distY, distX = distX, data = data)
 
     # Sandwich covariance estimator
