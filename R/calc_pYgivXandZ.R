@@ -28,9 +28,8 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     sigY <- beta_params[length(beta_params)]
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    #eY <- as.numeric(y) - meanY
-    #pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
-    pYgivXZ <- dnorm(x = as.numeric(y), mean = meanY, sd = sigY)
+    eY <- as.numeric(y) - meanY
+    pYgivXZ <- 1 / sqrt(2 * pi * sigY ^ 2) * exp(- eY ^ 2 / (2 * sigY ^ 2))
     # -------------------------------------- Calculate
   } else if (distY == "binomial") {
     # Get parameters ---------------------------------
@@ -46,8 +45,8 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    #pYgivXZ <- exp(- (1 - y) * meanY) / (1 + exp(meanY))
-    pYgivXZ <- dbinom(x = as.numeric(y), size = 1, prob = 1 / (1 + exp(- meanY)))
+    # pYgivXZ <- exp(- (1 - y) * meanY) / (1 + exp(meanY))
+    # pYgivXZ <- dbinom(x = as.numeric(y), size = 1, prob = 1 / (1 + exp(- meanY)))
     # -------------------------------------- Calculate
   }
   return(pYgivXZ)
