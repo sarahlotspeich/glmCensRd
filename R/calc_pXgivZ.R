@@ -27,13 +27,11 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     sigX <- eta_params[length(eta_params)]
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    #eX <- x - meanX
+    eX <- x - meanX
     if (distX == "normal") {
-      #pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
-      pXgivZ <- dnorm(x = as.numeric(x), mean = meanX, sd = sigX)
+      pXgivZ <- 1 / sqrt(2 * pi * sigX ^ 2) * exp(- eX ^ 2 / (2 * sigX ^ 2))
     } else {
-      #pXgivZ <- (1 / (x * sigX * sqrt(2 * pi))) * exp(- (log(x) - meanX) ^ 2 / (2 * sigX ^ 2))
-      pXgivZ <- dlnorm(x = as.numeric(x), meanlog = meanX, sdlog = sigX)
+      pXgivZ <- (1 / (x * sigX * sqrt(2 * pi))) * exp(- (log(x) - meanX) ^ 2 / (2 * sigX ^ 2))
     }
     # -------------------------------------- Calculate
   } else if (distX == "gamma") {
@@ -54,8 +52,7 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     scaleX <- meanX / shapeX
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    # pXgivZ <- (1 / gamma(shapeX)) * scaleX ^ (- shapeX) * (x ^ (shapeX - 1)) * exp(- x / scaleX)
-    pXgivZ <- dgamma(x = as.numeric(x), shape = shapeX, scale = scaleX)
+    pXgivZ <- (1 / gamma(shapeX)) * scaleX ^ (- shapeX) * (x ^ (shapeX - 1)) * exp(- x / scaleX)
     # -------------------------------------- Calculate
   } else if (distX == "inverse-gaussian") {
     # Get parameters ---------------------------------
@@ -73,8 +70,7 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    #pXgivZ <- sqrt((shapeX / (2 * pi * x ^ 3))) * exp(- (shapeX * (x - meanX) ^ 2) / (2 * meanX ^ 2 * x))
-    pXgivZ <- SuppDists::dinvGauss(x = as.numeric(x), nu = meanX, lambda = shapeX)
+    pXgivZ <- sqrt((shapeX / (2 * pi * x ^ 3))) * exp(- (shapeX * (x - meanX) ^ 2) / (2 * meanX ^ 2 * x))
     # -------------------------------------- Calculate
   } else if (distX == "weibull") {
     # Get parameters ---------------------------------
@@ -92,10 +88,9 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    #pXgivZ <- (shapeX / scaleX) * ((x / scaleX) ^ (shapeX - 1)) * exp(- (x / scaleX) ^ shapeX)
-    pXgivZ <- dweibull(x = as.numeric(x), shape = shapeX, scale = scaleX)
+    pXgivZ <- (shapeX / scaleX) * ((x / scaleX) ^ (shapeX - 1)) * exp(- (x / scaleX) ^ shapeX)
     # -------------------------------------- Calculate
-  } else if (distX == "exponential") {
+  } else if (distX %in% c("exponential", "poisson")) {
     # Get parameters ---------------------------------
     ## Construct rate  -------------------------------
     rateX <- eta_params[1]
@@ -109,25 +104,11 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    # pXgivZ <- rateX * exp(- rateX * x)
-    pXgivZ <- dexp(x = as.numeric(x), rate = rateX)
-    # -------------------------------------- Calculate
-  } else if (distX == "poisson") {
-    # Get parameters ---------------------------------
-    ## Construct rate  -------------------------------
-    rateX <- eta_params[1]
-    if (!is.null(z)) {
-      eta1 <- eta_params[-c(1)]
-      if (length(eta1) == 1) {
-        rateX <- rateX + eta1 * z
-      } else {
-        rateX <- rateX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-      }
+    if (distX == "exponential") {
+      pXgivZ <- rateX * exp(- rateX * x)
+    } else {
+      pXgivZ <- rateX ^ x * exp(- rateX) / factorial(x)
     }
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    #pXgivZ <- rateX ^ x * exp(- rateX) / factorial(x)
-    pXgivZ <- dpois(x = as.numeric(x), lambda = rateX)
     # -------------------------------------- Calculate
   }
   return(pXgivZ)
