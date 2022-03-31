@@ -31,13 +31,13 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
 
   # Initial parameter values
   if (distY == "normal") {
-    params0 <- c(rep(0, length(c(1, X, Z))), var(data[, Y]))
+    params0 <- c(rep(0, length(c(1, X, Z))), sd(data[, Y]))
   } else if (distY == "binomial") {
     params0 <- c(rep(0, length(c(1, X, Z))))
   }
 
   if (distX %in% c("normal", "log-normal")) {
-    params0 <- c(params0, rep(0, length(c(1, Z))), var(data[, X], na.rm = TRUE))
+    params0 <- c(params0, rep(0, length(c(1, Z))), sd(data[, X], na.rm = TRUE))
   } else if (distX %in% c('gamma', "inverse-gaussian")) {
     params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
   } else if (distX == "weibull") {
@@ -79,7 +79,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
 
     ## Sandwich covariance
     n <- nrow(data)
-    param_cov <- (solve(A) %*% B %*% t(solve(A)))
+    param_cov <- solve(A) %*% B %*% t(solve(A))
     param_se <- sqrt(diag(param_cov)) / sqrt(n)
   } else {
     param_se <- rep(NA, length(param_est))
