@@ -36,7 +36,9 @@ glmCensRd(
 
 \item{distX}{Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.}
 
-\item{estSE}{A string input for which initial values to use in \code{nlm}. Options include \code{"complete-case"} (the default) and \code{"naive"}.}
+\item{estSE}{If \code{TRUE}, robust sandwich estimators of parameter standard errors are included in the output. Default is \code{FALSE}.}
+
+\item{initial_values}{A string input for which initial values to use in \code{nlm}. Options include \code{"complete-case"} (the default) and \code{"naive"}.}
 
 \item{steptol}{(Fed to \code{nlm}) A positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.}
 
@@ -46,6 +48,7 @@ glmCensRd(
 A list with the following elements:
 \item{outcome_model}{A list containing details of the fitted model for the outcome.}
 \item{predictor_model}{A list containing details of the fitted model for the predictor.}
+\item{initial_values}{A string indicating which starting values were used in the algorithm.}
 \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 }
 \description{
