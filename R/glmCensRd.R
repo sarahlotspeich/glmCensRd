@@ -31,7 +31,50 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
   X <- "X"
 
   # Initial parameter values
-  if (initial_values == "naive") {
+  if (initial_values == "complete-case") {
+    suppressWarnings(
+      cc_mod <- nlm(f = loglik,
+                    p = params0,
+                    steptol = steptol,
+                    iterlim = iterlim,
+                    hessian = FALSE,
+                    Y = Y,
+                    X = X,
+                    D = D,
+                    W = W,
+                    Z = Z,
+                    partX = partX,
+                    distY = distY,
+                    distX = distX,
+                    data = data[data[, D] == 1, ]
+      )
+    )
+    if (cc_mod$code <= 3) {
+      params0 <- cc_mod$estimate
+    } else {
+      initial_values <- "naive"
+    }
+    # if (distY == "normal") {
+    #   cc_outcome_model <- glm(formula = as.formula(paste(Y, "~", X, "+", paste(Z, collapse = "+"))),
+    #                           data = data, family = "gaussian")
+    #   params0 <- c(cc_outcome_model$coefficients, sigma(cc_outcome_model))
+    # } else if (distY == "binomial") {
+    #   #params0 <- c(rep(0, length(c(1, X, Z))))
+    # }
+    #
+    # if (distX == "normal") {
+    #   cc_predictor_model <- glm(formula = as.formula(paste(X, "~", paste(Z, collapse = "+"))),
+    #                           data = data, family = "gaussian")
+    #   params0 <- c(params0, cc_predictor_model$coefficients, sigma(cc_predictor_model))
+    #   #params0 <- c(params0, rep(0, length(c(1, Z))), sd(data[, X], na.rm = TRUE))
+    # } else if (distX %in% c('gamma', "inverse-gaussian")) {
+    #   #params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
+    # } else if (distX == "weibull") {
+    #   #params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
+    # } else if (distX %in% c("exponential", "poisson")) {
+    #   #params0 <- c(params0, rep(0.1, length(c(1, Z))))
+    # }
+  } else if (initial_values == "naive") {
     if (distY == "normal") {
       params0 <- c(rep(0, length(c(1, X, Z))), sd(data[, Y]))
     } else if (distY == "binomial") {
@@ -46,27 +89,6 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
       params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
     } else if (distX %in% c("exponential", "poisson")) {
       params0 <- c(params0, rep(0.1, length(c(1, Z))))
-    }
-  } else if (initial_values == "complete-case") {
-    if (distY == "normal") {
-      cc_outcome_model <- glm(formula = as.formula(paste(Y, "~", X, "+", paste(Z, collapse = "+"))),
-                              data = data, family = "gaussian")
-      params0 <- c(cc_outcome_model$coefficients, sigma(cc_outcome_model))
-    } else if (distY == "binomial") {
-      #params0 <- c(rep(0, length(c(1, X, Z))))
-    }
-
-    if (distX == "normal") {
-      cc_predictor_model <- glm(formula = as.formula(paste(X, "~", paste(Z, collapse = "+"))),
-                              data = data, family = "gaussian")
-      params0 <- c(params0, cc_predictor_model$coefficients, sigma(cc_predictor_model))
-      #params0 <- c(params0, rep(0, length(c(1, Z))), sd(data[, X], na.rm = TRUE))
-    } else if (distX %in% c('gamma', "inverse-gaussian")) {
-      #params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
-    } else if (distX == "weibull") {
-      #params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
-    } else if (distX %in% c("exponential", "poisson")) {
-      #params0 <- c(params0, rep(0.1, length(c(1, Z))))
     }
   }
 
