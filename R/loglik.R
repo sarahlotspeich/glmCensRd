@@ -127,7 +127,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     data_row <- data.frame(t(data_row))
     return(
       tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
-                                Yi = data_row[Y], Zi = data_row[, Z])$value,
+                                Yi = data_row[, Y], Zi = data_row[, Z])$value,
                error = function(err) {0})
     )
   }
