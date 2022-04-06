@@ -9,8 +9,9 @@
 #' @param distY Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.
 #' @param distX Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.
 #' @param estSE If \code{TRUE}, robust sandwich estimators of parameter standard errors are included in the output. Default is \code{FALSE}.
-#' @param steptol (Fed to \code{nlm()}) A positive scalar providing the minimum allowable relative step length. Default is \code{1e-4}.
-#' @param iterlim (Fed to \code{nlm()}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
+#' @param estSE A string input for which initial values to use in \code{nlm}. Options include \code{"complete-case"} (the default) and \code{"naive"}.
+#' @param steptol (Fed to \code{nlm}) A positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.
+#' @param iterlim (Fed to \code{nlm}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
 #'
 #' @return A list with the following elements:
 #' \item{outcome_model}{A list containing details of the fitted model for the outcome.}
@@ -19,7 +20,7 @@
 #'
 #' @export
 #'
-glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", distX = "normal", estSE = FALSE, steptol = 1e-4, iterlim = 100) {
+glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", distX = "normal", estSE = FALSE, initial_values = "complete-case", steptol = 1E-6, iterlim = 100) {
   # Subset data to relevant, user-specified columns
   data <- data[, c(Y, W, D, Z)]
   # Create variable X = W
@@ -30,20 +31,43 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
   X <- "X"
 
   # Initial parameter values
-  if (distY == "normal") {
-    params0 <- c(rep(0, length(c(1, X, Z))), sd(data[, Y]))
-  } else if (distY == "binomial") {
-    params0 <- c(rep(0, length(c(1, X, Z))))
-  }
+  if (initial_values == "naive") {
+    if (distY == "normal") {
+      params0 <- c(rep(0, length(c(1, X, Z))), sd(data[, Y]))
+    } else if (distY == "binomial") {
+      params0 <- c(rep(0, length(c(1, X, Z))))
+    }
 
-  if (distX %in% c("normal", "log-normal")) {
-    params0 <- c(params0, rep(0, length(c(1, Z))), sd(data[, X], na.rm = TRUE))
-  } else if (distX %in% c('gamma', "inverse-gaussian")) {
-    params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
-  } else if (distX == "weibull") {
-    params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
-  } else if (distX %in% c("exponential", "poisson")) {
-    params0 <- c(params0, rep(0.1, length(c(1, Z))))
+    if (distX %in% c("normal", "log-normal")) {
+      params0 <- c(params0, rep(0, length(c(1, Z))), sd(data[, X], na.rm = TRUE))
+    } else if (distX %in% c('gamma', "inverse-gaussian")) {
+      params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
+    } else if (distX == "weibull") {
+      params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
+    } else if (distX %in% c("exponential", "poisson")) {
+      params0 <- c(params0, rep(0.1, length(c(1, Z))))
+    }
+  } else if (initial_values == "complete-case") {
+    if (distY == "normal") {
+      cc_outcome_model <- glm(formula = as.formula(paste(Y, "~", X, "+", paste(Z, collapse = "+"))),
+                              data = data, family = "gaussian")
+      params0 <- c(cc_outcome_model$coefficients, sigma(cc_outcome_model))
+    } else if (distY == "binomial") {
+      #params0 <- c(rep(0, length(c(1, X, Z))))
+    }
+
+    if (distX == "normal") {
+      cc_predictor_model <- glm(formula = as.formula(paste(X, "~", paste(Z, collapse = "+"))),
+                              data = data, family = "gaussian")
+      params0 <- c(params0, cc_predictor_model$coefficients, sigma(cc_predictor_model))
+      #params0 <- c(params0, rep(0, length(c(1, Z))), sd(data[, X], na.rm = TRUE))
+    } else if (distX %in% c('gamma', "inverse-gaussian")) {
+      #params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
+    } else if (distX == "weibull") {
+      #params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
+    } else if (distX %in% c("exponential", "poisson")) {
+      #params0 <- c(params0, rep(0.1, length(c(1, Z))))
+    }
   }
 
   suppressWarnings(
