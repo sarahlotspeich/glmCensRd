@@ -41,7 +41,11 @@ loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY = "normal", d
     beta_params <- params[1:(2 + length(Z))]
     # ------------------------------ Subset parameters
   }
-  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
+  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y],
+                             x = uncens_data[, X],
+                             z = uncens_data[, Z],
+                             distY = distY,
+                             beta_params = beta_params)
 
   ####################################################
   # Predictor model P(X|Z) ###########################
