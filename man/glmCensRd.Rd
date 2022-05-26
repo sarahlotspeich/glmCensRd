@@ -14,21 +14,20 @@ glmCensRd(
   distY = "normal",
   distX = "normal",
   estSE = FALSE,
-  initial_values = "complete-case",
-  steptol = 1e-06,
+  steptol = 0.01,
   iterlim = 100
 )
 }
 \arguments{
-\item{Y}{Name of column variable.}
+\item{Y}{Name of outcome variable.}
 
-\item{W}{Name of observed (i.e., censored) version of \code{X}.}
+\item{W}{Name of observed (censored) version of \code{X}.}
 
 \item{D}{Name of event indicator, defined to be = 1 if \code{X} was uncensored.}
 
-\item{Z}{(Optional) name(s) of additional fully observed covariates. Default is \code{NULL}}
+\item{Z}{(Optional) Name(s) of additional fully observed covariates. Default is \code{NULL}}
 
-\item{partX}{Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.}
+\item{partX}{(Fed to \code{integrate}) Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.}
 
 \item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 
@@ -38,8 +37,6 @@ glmCensRd(
 
 \item{estSE}{If \code{TRUE}, robust sandwich estimators of parameter standard errors are included in the output. Default is \code{FALSE}.}
 
-\item{initial_values}{A string input for which initial values to use in \code{nlm}. Options include \code{"complete-case"} (the default) and \code{"naive"}.}
-
 \item{steptol}{(Fed to \code{nlm}) A positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.}
 
 \item{iterlim}{(Fed to \code{nlm}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.}
@@ -48,7 +45,6 @@ glmCensRd(
 A list with the following elements:
 \item{outcome_model}{A list containing details of the fitted model for the outcome.}
 \item{predictor_model}{A list containing details of the fitted model for the predictor.}
-\item{initial_values}{A string indicating which starting values were used in the algorithm.}
 \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 }
 \description{

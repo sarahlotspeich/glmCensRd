@@ -1,27 +1,25 @@
 #' Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)
 #'
-#' @param Y Name of column variable.
-#' @param W Name of observed (i.e., censored) version of \code{X}.
+#' @param Y Name of outcome variable.
+#' @param W Name of observed (censored) version of \code{X}.
 #' @param D Name of event indicator, defined to be = 1 if \code{X} was uncensored.
-#' @param Z (Optional) name(s) of additional fully observed covariates. Default is \code{NULL}
-#' @param partX Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.
+#' @param Z (Optional) Name(s) of additional fully observed covariates. Default is \code{NULL}
+#' @param partX (Fed to \code{integrate}) Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.
 #' @param data A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.
 #' @param distY Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.
 #' @param distX Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.
 #' @param estSE If \code{TRUE}, robust sandwich estimators of parameter standard errors are included in the output. Default is \code{FALSE}.
-#' @param initial_values A string input for which initial values to use in \code{nlm}. Options include \code{"complete-case"} (the default) and \code{"naive"}.
 #' @param steptol (Fed to \code{nlm}) A positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.
 #' @param iterlim (Fed to \code{nlm}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
 #'
 #' @return A list with the following elements:
 #' \item{outcome_model}{A list containing details of the fitted model for the outcome.}
 #' \item{predictor_model}{A list containing details of the fitted model for the predictor.}
-#' \item{initial_values}{A string indicating which starting values were used in the algorithm.}
 #' \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 #'
 #' @export
 #'
-glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", distX = "normal", estSE = FALSE, initial_values = "complete-case", steptol = 1E-6, iterlim = 100) {
+glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", distX = "normal", estSE = FALSE, steptol = 1E-2, iterlim = 100) {
   # Subset data to relevant, user-specified columns
   data <- data[, c(Y, W, D, Z)]
   # Create variable X = W
@@ -34,43 +32,19 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
   # Initial parameter values
   ## Naive
   if (distY == "normal") {
-    params0 <- c(rep(0, length(c(1, X, Z))), sd(data[, Y]))
+    params0 <- c(rep(0, length(c(1, X, Z))), 1)
   } else if (distY == "binomial") {
     params0 <- c(rep(0, length(c(1, X, Z))))
   }
 
   if (distX %in% c("normal", "log-normal")) {
-    params0 <- c(params0, rep(0, length(c(1, Z))), sd(data[, X], na.rm = TRUE))
+    params0 <- c(params0, rep(0, length(c(1, Z))), 1)
   } else if (distX %in% c('gamma', "inverse-gaussian")) {
-    params0 <- c(params0, 0.1, rep(0.1, length(c(1, Z))))
+    params0 <- c(params0, 1E-4, rep(1E-4, length(c(1, Z))))
   } else if (distX == "weibull") {
-    params0 <- c(params0, 1, rep(0.1, length(c(1, Z))))
+    params0 <- c(params0, 1E-4, rep(1E-4, length(c(1, Z))))
   } else if (distX %in% c("exponential", "poisson")) {
-    params0 <- c(params0, rep(0.1, length(c(1, Z))))
-  }
-
-  ## If complete-case was selected, update but use naive as a start
-  if (initial_values == "complete-case") {
-    suppressWarnings(
-      cc_mod <- nlm(f = loglik,
-                    p = params0,
-                    steptol = steptol,
-                    iterlim = iterlim,
-                    hessian = FALSE,
-                    Y = Y,
-                    X = X,
-                    D = D,
-                    W = W,
-                    Z = Z,
-                    partX = partX,
-                    distY = distY,
-                    distX = distX,
-                    data = data[data[, D] == 1, ]
-      )
-    )
-    if (cc_mod$code <= 3) {
-      params0 <- cc_mod$estimate
-    }
+    params0 <- c(params0, rep(1E-4, length(c(1, Z))))
   }
 
   suppressWarnings(
@@ -81,11 +55,27 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
 
   if (estSE) {
     # Derivatives of the log-likelihood
-    first_deriv <- calc_deriv_loglik(params = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
-                                     partX = partX, distY = distY, distX = distX, data = data)
+    first_deriv <- calc_deriv_loglik(params = param_est,
+                                     Y = Y,
+                                     X = X,
+                                     D = D,
+                                     W = W,
+                                     Z = Z,
+                                     partX = partX,
+                                     distY = distY,
+                                     distX = distX,
+                                     data = data)
 
-    second_deriv <- calc_deriv2_loglik(params = param_est, Y = Y, X = X, D = D, W = W, Z = Z,
-                                       partX = partX, distY = distY, distX = distX, data = data)
+    second_deriv <- calc_deriv2_loglik(params = param_est,
+                                       Y = Y,
+                                       X = X,
+                                       D = D,
+                                       W = W,
+                                       Z = Z,
+                                       partX = partX,
+                                       distY = distY,
+                                       distX = distX,
+                                       data = data)
 
     # Sandwich covariance estimator
     ## Sandwich meat
@@ -120,16 +110,19 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
     modY_est <- param_est[1:dim_beta]
     modY_se <- param_se[1:dim_beta]
     modY_sigma2 <- param_est[dim_beta + 1] ^ 2
-    modY_coeff <- data.frame(coeff = modY_est, se = modY_se)
+    modY_coeff <- data.frame(coeff = modY_est,
+                             se = modY_se)
     rownames(modY_coeff) <- c("(Intercept)", X, Z)
-    modY <- list(distY = distY, mean = modY_coeff, sigma2 = modY_sigma2)
+    modY <- list(distY = distY, mean = modY_coeff,
+                 sigma2 = modY_sigma2)
     param_est <- param_est[-c(1:(dim_beta + 1))]
     param_se <- param_se[-c(1:(dim_beta + 1))]
   } else if (distY == "binomial") {
     dim_beta <- length(c(X, Z)) + 1
     modY_est <- param_est[1:dim_beta]
     modY_se <- param_se[1:dim_beta]
-    modY_coeff <- data.frame(coeff = modY_est, se = modY_se)
+    modY_coeff <- data.frame(coeff = modY_est,
+                             se = modY_se)
     rownames(modY_coeff) <- c("(Intercept)", X, Z)
     modY <- list(distY = distY, mean = modY_coeff)
     param_est <- param_est[-c(1:dim_beta)]
@@ -143,14 +136,18 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
     dim_eta <- length(Z) + 1
     modX_est <- param_est[1:dim_eta]
     modX_se <- param_se[1:dim_eta]
-    modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
+    modX_coeff <- data.frame(coeff = modX_est,
+                             se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
     modX_sigma2 <- param_est[dim_eta + 1] ^ 2
-    modX <- list(distX = distX, mean = modX_coeff, sigma2 = modX_sigma2)
+    modX <- list(distX = distX,
+                 mean = modX_coeff,
+                 sigma2 = modX_sigma2)
   } else if (distX %in% c("gamma", "inverse-gaussian")) {
     modX_shape_est <- param_est[1]
     modX_shape_se <- param_se[1]
-    modX_shape <- data.frame(coeff = modX_shape_est, se = modX_shape_se)
+    modX_shape <- data.frame(coeff = modX_shape_est,
+                             se = modX_shape_se)
     rownames(modX_shape) <- c("(Intercept)")
     param_est <- param_est[-1]
     param_se <- param_se[-1]
@@ -158,14 +155,18 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
     dim_eta <- length(Z) + 1
     modX_est <- param_est[1:dim_eta]
     modX_se <- param_se[1:dim_eta]
-    modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
+    modX_coeff <- data.frame(coeff = modX_est,
+                             se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
 
-    modX <- list(distX = distX, mean = modX_coeff, shape = modX_shape)
+    modX <- list(distX = distX,
+                 mean = modX_coeff,
+                 shape = modX_shape)
   } else if (distX == "weibull") {
     modX_shape_est <- param_est[1]
     modX_shape_se <- param_se[1]
-    modX_shape <- data.frame(coeff = modX_shape_est, se = modX_shape_se)
+    modX_shape <- data.frame(coeff = modX_shape_est,
+                             se = modX_shape_se)
     rownames(modX_shape) <- c("(Intercept)")
     param_est <- param_est[-1]
     param_se <- param_se[-1]
@@ -173,18 +174,25 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
     dim_eta <- (length(Z) + 1)
     modX_est <- param_est[1:dim_eta]
     modX_se <- param_se[1:dim_eta]
-    modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
+    modX_coeff <- data.frame(coeff = modX_est,
+                             se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
 
-    modX <- list(distX = distX, scale = modX_coeff, shape = modX_shape)
+    modX <- list(distX = distX,
+                 scale = modX_coeff,
+                 shape = modX_shape)
   } else if (distX %in% c("exponential", "poisson")) {
     dim_eta <- length(Z) + 1
     modX_est <- param_est[1:dim_eta]
     modX_se <- param_se[1:dim_eta]
-    modX_coeff <- data.frame(coeff = modX_est, se = modX_se)
+    modX_coeff <- data.frame(coeff = modX_est,
+                             se = modX_se)
     rownames(modX_coeff) <- c("(Intercept)", Z)
-    modX <- list(distX = distX, rate = modX_coeff)
+    modX <- list(distX = distX,
+                 rate = modX_coeff)
   }
 
-  return(list(outcome_model = modY, predictor_model = modX, initial_values = initial_values, code = mod$code))
+  return(list(outcome_model = modY,
+              predictor_model = modX,
+              code = mod$code))
 }
