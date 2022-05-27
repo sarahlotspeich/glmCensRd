@@ -11,10 +11,10 @@ calc_deriv2_loglik(
   W,
   D,
   Z = NULL,
+  data,
   subdivisions = 100,
   distY = "normal",
-  distX = "normal",
-  data
+  distX = "normal"
 )
 }
 \arguments{
@@ -30,13 +30,13 @@ calc_deriv2_loglik(
 
 \item{Z}{(optional) name(s) of additional fully observed covariates. If none, \code{Z = NULL} (the default).}
 
+\item{data}{a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
+
 \item{subdivisions}{(fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.}
 
 \item{distY}{distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.}
 
 \item{distX}{distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"inverse-gaussian"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
-
-\item{data}{a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 }
 \value{
 A vector containing the derivatives of the log-likelihood contributions of the rows/observations in \code{data}.

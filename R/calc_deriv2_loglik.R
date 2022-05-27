@@ -13,7 +13,7 @@
 #' @export
 #' @return A vector containing the derivatives of the log-likelihood contributions of the rows/observations in \code{data}.
 #'
-calc_deriv2_loglik <- function(params, Y, X, W, D, Z = NULL, subdivisions = 100, distY = "normal", distX = "normal", data) {
+calc_deriv2_loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY = "normal", distX = "normal") {
   p <- length(params)
   eps <- params * (10 ^ (- 4))
 
