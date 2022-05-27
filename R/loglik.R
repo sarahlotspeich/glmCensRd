@@ -13,7 +13,7 @@
 #' @export
 #' @return A scalar of the log-likelihood function (negated for use with \code{nlm}()).
 #'
-loglik <- function(params, Y, X, W, D, Z = NULL, subdivisions = 100, distY = "normal", distX = "normal", data) {
+loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY = "normal", distX = "normal") {
   ####################################################
   # Pre-processing ###################################
   ####################################################
