@@ -9,37 +9,37 @@ glmCensRd(
   W,
   D,
   Z = NULL,
-  partX = 50,
   data,
   distY = "normal",
   distX = "normal",
-  estSE = FALSE,
+  robcov = TRUE,
+  subdivisions = 50,
   steptol = 0.01,
   iterlim = 100
 )
 }
 \arguments{
-\item{Y}{Name of outcome variable.}
+\item{Y}{name of outcome variable.}
 
-\item{W}{Name of observed (censored) version of \code{X}.}
+\item{W}{name of observed (censored) version of \code{X}.}
 
-\item{D}{Name of event indicator, defined to be = 1 if \code{X} was uncensored.}
+\item{D}{name of event indicator, defined to be \code{= 1} if \code{X} was uncensored and \code{0} otherwise.}
 
-\item{Z}{(Optional) Name(s) of additional fully observed covariates. Default is \code{NULL}}
+\item{Z}{(optional) name(s) of additional fully observed covariates. Default is \code{NULL}.}
 
-\item{partX}{(Fed to \code{integrate}) Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.}
+\item{data}{a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 
-\item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
+\item{distY}{distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.}
 
-\item{distY}{Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.}
+\item{distX}{distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"inverse-gaussian"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
 
-\item{distX}{Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.}
+\item{robcov}{logical. If \code{TRUE} (the default), the robust sandwich covariance estimator of parameter standard errors is included in the output.}
 
-\item{estSE}{If \code{TRUE}, robust sandwich estimators of parameter standard errors are included in the output. Default is \code{FALSE}.}
+\item{subdivisions}{(fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.}
 
-\item{steptol}{(Fed to \code{nlm}) A positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.}
+\item{steptol}{(fed to \code{nlm}) a positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.}
 
-\item{iterlim}{(Fed to \code{nlm}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.}
+\item{iterlim}{(fed to \code{nlm}) a positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.}
 }
 \value{
 A list with the following elements:

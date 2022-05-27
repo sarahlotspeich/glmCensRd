@@ -1,16 +1,16 @@
 #' Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)
 #'
-#' @param Y Name of outcome variable.
-#' @param W Name of observed (censored) version of \code{X}.
-#' @param D Name of event indicator, defined to be = 1 if \code{X} was uncensored.
-#' @param Z (Optional) Name(s) of additional fully observed covariates. Default is \code{NULL}
-#' @param partX (Fed to \code{integrate}) Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.
-#' @param data A dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.
-#' @param distY Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.
-#' @param distX Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.
-#' @param estSE If \code{TRUE}, robust sandwich estimators of parameter standard errors are included in the output. Default is \code{FALSE}.
-#' @param steptol (Fed to \code{nlm}) A positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.
-#' @param iterlim (Fed to \code{nlm}) A positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
+#' @param Y name of outcome variable.
+#' @param W name of observed (censored) version of \code{X}.
+#' @param D name of event indicator, defined to be \code{= 1} if \code{X} was uncensored and \code{0} otherwise.
+#' @param Z (optional) name(s) of additional fully observed covariates. Default is \code{NULL}.
+#' @param data a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.
+#' @param distY distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.
+#' @param distX distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"inverse-gaussian"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.
+#' @param robcov logical. If \code{TRUE} (the default), the robust sandwich covariance estimator of parameter standard errors is included in the output.
+#' @param subdivisions (fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.
+#' @param steptol (fed to \code{nlm}) a positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.
+#' @param iterlim (fed to \code{nlm}) a positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
 #'
 #' @return A list with the following elements:
 #' \item{outcome_model}{A list containing details of the fitted model for the outcome.}
@@ -19,18 +19,20 @@
 #'
 #' @export
 #'
-glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", distX = "normal", estSE = FALSE, steptol = 1E-2, iterlim = 100) {
+glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal", robcov = TRUE, subdivisions = 50, steptol = 1E-2, iterlim = 100) {
   # Subset data to relevant, user-specified columns
   data <- data[, c(Y, W, D, Z)]
+
   # Create variable X = W
   data <- cbind(data, X = data[, W])
+
   ## Make it NA for censored (D = 0)
   data[data[, D] == 0, "X"] <- NA
+
   ## Define column X variable name
   X <- "X"
 
   # Initial parameter values
-  ## Naive
   if (distY == "normal") {
     params0 <- c(rep(0, length(c(1, X, Z))), 1)
   } else if (distY == "binomial") {
@@ -48,12 +50,29 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
   }
 
   suppressWarnings(
-    mod <- nlm(f = loglik, p = params0, steptol = steptol, iterlim = iterlim, hessian = FALSE,
-               Y = Y, X = X, D = D, W = W, Z = Z, partX = partX, distY = distY, distX = distX, data = data)
+    mod <- nlm(f = loglik,
+               p = params0,
+               steptol = steptol,
+               iterlim = iterlim,
+               hessian = TRUE,
+               Y = Y,
+               X = X,
+               D = D,
+               W = W,
+               Z = Z,
+               subdivisions = subdivisions,
+               distY = distY,
+               distX = distX,
+               data = data)
   )
   param_est <- mod$estimate
+  param_vcov <- tryCatch(expr = solve(mod$hessian),
+                         error = function(c) matrix(data = NA,
+                                                    nrow = length(param_est),
+                                                    ncol = length(param_est))
+                         )
 
-  if (estSE) {
+  if (robcov) {
     # Derivatives of the log-likelihood
     first_deriv <- calc_deriv_loglik(params = param_est,
                                      Y = Y,
@@ -61,7 +80,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
                                      D = D,
                                      W = W,
                                      Z = Z,
-                                     partX = partX,
+                                     subdivisions = subdivisions,
                                      distY = distY,
                                      distX = distX,
                                      data = data)
@@ -72,7 +91,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
                                        D = D,
                                        W = W,
                                        Z = Z,
-                                       partX = partX,
+                                       subdivisions = subdivisions,
                                        distY = distY,
                                        distX = distX,
                                        data = data)
@@ -96,9 +115,12 @@ glmCensRd <- function(Y, W, D, Z = NULL, partX = 50, data,  distY = "normal", di
 
     ## Sandwich covariance
     n <- nrow(data)
-    param_cov <- solve(A) %*% B %*% t(solve(A))
-    param_se <- sqrt(diag(param_cov)) / sqrt(n)
+    param_rob_vcov <- solve(A) %*% B %*% t(solve(A))
+    param_se <- sqrt(diag(param_rob_vcov)) / sqrt(n)
   } else {
+    param_rob_vcov <- matrix(data = NA,
+                             nrow = length(param_est),
+                             ncol = length(param_est))
     param_se <- rep(NA, length(param_est))
   }
 
