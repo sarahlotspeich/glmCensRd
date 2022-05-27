@@ -110,36 +110,40 @@ loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY
   # Log-likelihood contribution of uncensored X ------
   ll <- sum(log(uncens_data[, "jointP"]))
   # ------ Log-likelihood contribution of uncensored X
-  # Log-likelihood contribution of censored X --------
-  joint_dens <- function(x, Yi, Zi) {
-    ####################################################
-    # Analysis model P(Y|X,Z) ##########################
-    ####################################################
-    pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
 
-    ####################################################
-    # Predictor model P(X|Z) ###########################
-    ####################################################
-    pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
+  if (nrow(cens_data) > 0) {
+    # Log-likelihood contribution of censored X --------
+    joint_dens <- function(x, Yi, Zi) {
+      ####################################################
+      # Analysis model P(Y|X,Z) ##########################
+      ####################################################
+      pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
 
-    ####################################################
-    # Joint density P(Y,X,Z) ###########################
-    ####################################################
-    return(pYgivXZ * pXgivZ)
+      ####################################################
+      # Predictor model P(X|Z) ###########################
+      ####################################################
+      pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
+
+      ####################################################
+      # Joint density P(Y,X,Z) ###########################
+      ####################################################
+      return(pYgivXZ * pXgivZ)
+    }
+    integrate_joint_dens <- function(data_row) {
+      data_row <- data.frame(t(data_row))
+      return(
+        tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = subdivisions,
+                                  Yi = data_row[, Y], Zi = data_row[, Z])$value,
+                 error = function(err) {0})
+      )
+    }
+    integral <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
+    log_integral <- log(integral)
+    log_integral[log_integral == -Inf] <- 0
+    ll <- ll + sum(log_integral)
+    # -------- Log-likelihood contribution of censored X
   }
-  integrate_joint_dens <- function(data_row) {
-    data_row <- data.frame(t(data_row))
-    return(
-      tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = subdivisions,
-                                Yi = data_row[, Y], Zi = data_row[, Z])$value,
-               error = function(err) {0})
-    )
-  }
-  integral <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
-  log_integral <- log(integral)
-  log_integral[log_integral == -Inf] <- 0
-  ll <- ll + sum(log_integral)
-  # -------- Log-likelihood contribution of censored X
+
   # Return (-1) x log-likelihood for use with nlm() --
   return(- ll)
   # -- Return (-1) x log-likelihood for use with nlm()
