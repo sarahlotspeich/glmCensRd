@@ -5,7 +5,7 @@
 #' @param X name of censored predictor variable.
 #' @param W name of observed (censored) version of \code{X}.
 #' @param D name of event indicator, defined to be \code{= 1} if \code{X} was uncensored and \code{0} otherwise.
-#' @param Z (optional) name(s) of additional fully observed covariates. Default is \code{NULL}.
+#' @param Z (optional) name(s) of additional fully observed covariates. If none, \code{Z = NULL} (the default).
 #' @param data a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.
 #' @param subdivisions (fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.
 #' @param distY distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.

@@ -25,7 +25,7 @@ glmCensRd(
 
 \item{D}{name of event indicator, defined to be \code{= 1} if \code{X} was uncensored and \code{0} otherwise.}
 
-\item{Z}{(optional) name(s) of additional fully observed covariates. Default is \code{NULL}.}
+\item{Z}{(optional) name(s) of additional fully observed covariates. If none, \code{Z = NULL} (the default).}
 
 \item{data}{a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 
