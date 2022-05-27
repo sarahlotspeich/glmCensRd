@@ -43,9 +43,11 @@ glmCensRd(
 }
 \value{
 A list with the following elements:
-\item{outcome_model}{A list containing details of the fitted model for the outcome.}
-\item{predictor_model}{A list containing details of the fitted model for the predictor.}
-\item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
+\item{outcome_model}{a list containing details of the fitted model for the outcome.}
+\item{predictor_model}{a list containing details of the fitted model for the predictor.}
+\item{code}{an integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
+\item{vcov}{variance-covariance matrix of the model parameters.}
+\item{rvcov}{robust sandwich variance-covariance matrix of the model parameters.}
 }
 \description{
 Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)
