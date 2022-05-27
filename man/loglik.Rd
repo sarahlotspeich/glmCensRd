@@ -11,32 +11,32 @@ loglik(
   W,
   D,
   Z = NULL,
-  partX = 50,
+  subdivisions = 100,
   distY = "normal",
   distX = "normal",
   data
 )
 }
 \arguments{
-\item{params}{Parameter values.}
+\item{params}{parameter values.}
 
-\item{Y}{Name of outcome variable.}
+\item{Y}{name of outcome variable.}
 
-\item{X}{Name of censored predictor variable.}
+\item{X}{name of censored predictor variable.}
 
-\item{W}{Name of observed (i.e., censored) version of \code{X}.}
+\item{W}{name of observed (censored) version of \code{X}.}
 
-\item{D}{Name of event indicator, defined to be = 1 if \code{X} was uncensored.}
+\item{D}{name of event indicator, defined to be \code{= 1} if \code{X} was uncensored and \code{0} otherwise.}
 
-\item{Z}{(Optional) name(s) of additional fully observed covariates. Default is \code{NULL}}
+\item{Z}{(optional) name(s) of additional fully observed covariates. Default is \code{NULL}.}
 
-\item{partX}{Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.}
+\item{subdivisions}{(fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.}
 
-\item{distY}{Distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}.}
+\item{distY}{distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.}
 
-\item{distX}{Distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}.}
+\item{distX}{distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"inverse-gaussian"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
 
-\item{data}{A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{D}, and \code{Z} (if applicable).}
+\item{data}{a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 }
 \value{
 A scalar of the log-likelihood function (negated for use with \code{nlm}()).
