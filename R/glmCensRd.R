@@ -13,9 +13,11 @@
 #' @param iterlim (fed to \code{nlm}) a positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
 #'
 #' @return A list with the following elements:
-#' \item{outcome_model}{A list containing details of the fitted model for the outcome.}
-#' \item{predictor_model}{A list containing details of the fitted model for the predictor.}
-#' \item{code}{An integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
+#' \item{outcome_model}{a list containing details of the fitted model for the outcome.}
+#' \item{predictor_model}{a list containing details of the fitted model for the predictor.}
+#' \item{code}{an integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
+#' \item{vcov}{variance-covariance matrix of the model parameters.}
+#' \item{rvcov}{robust sandwich variance-covariance matrix of the model parameters.}
 #'
 #' @export
 #'
@@ -71,6 +73,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                                                     nrow = length(param_est),
                                                     ncol = length(param_est))
                          )
+  param_se <- sqrt(diag(param_vcov))
 
   if (robcov) {
     # Derivatives of the log-likelihood
@@ -116,7 +119,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
     ## Sandwich covariance
     n <- nrow(data)
     param_rob_vcov <- solve(A) %*% B %*% t(solve(A))
-    param_se <- sqrt(diag(param_rob_vcov)) / sqrt(n)
+    param_rob_se <- sqrt(diag(param_rob_vcov)) / sqrt(n)
   } else {
     param_rob_vcov <- matrix(data = NA,
                              nrow = length(param_est),
@@ -128,93 +131,150 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
   # Analysis model P(Y|X,Z) ##########################
   ####################################################
   if (distY == "normal") {
+    # Create coefficients dataframe for outcome model
+    ## Mean parameter (linear function of Z)
     dim_beta <- length(c(X, Z)) + 1
-    modY_est <- param_est[1:dim_beta]
-    modY_se <- param_se[1:dim_beta]
+    modY_mean_est <- param_est[1:dim_beta]
+    modY_mean_se <- param_se[1:dim_beta]
+    modY_mean_rse <- param_rob_se[1:dim_beta]
+    modY_mean <- data.frame(coeff = modY_mean_est,
+                            se = modY_mean_se,
+                            robse = modY_mean_rse)
+    rownames(modY_mean) <- c("(Intercept)", X, Z)
+
+    ## Error variance parameter (estimated directly)
     modY_sigma2 <- param_est[dim_beta + 1] ^ 2
-    modY_coeff <- data.frame(coeff = modY_est,
-                             se = modY_se)
-    rownames(modY_coeff) <- c("(Intercept)", X, Z)
-    modY <- list(distY = distY, mean = modY_coeff,
+
+    # Construct contents of "outcome_model" slot
+    modY <- list(distY = distY,
+                 mean = modY_mean,
                  sigma2 = modY_sigma2)
+
+    # Remove outcome model parameters/standard errors
     param_est <- param_est[-c(1:(dim_beta + 1))]
     param_se <- param_se[-c(1:(dim_beta + 1))]
+    param_rob_se <- param_rob_se[-c(1:(dim_beta + 1))]
   } else if (distY == "binomial") {
+    # Create coefficients dataframe for outcome model
+    ## Mean parameter (linear function of Z)
     dim_beta <- length(c(X, Z)) + 1
-    modY_est <- param_est[1:dim_beta]
-    modY_se <- param_se[1:dim_beta]
-    modY_coeff <- data.frame(coeff = modY_est,
-                             se = modY_se)
-    rownames(modY_coeff) <- c("(Intercept)", X, Z)
-    modY <- list(distY = distY, mean = modY_coeff)
+    modY_mean_est <- param_est[1:dim_beta]
+    modY_mean_se <- param_se[1:dim_beta]
+    modY_mean_rse <- param_rob_se[1:dim_beta]
+    modY_mean <- data.frame(coeff = modY_mean_est,
+                            se = modY_mean_se,
+                            robse = modY_mean_rse)
+    rownames(modY_mean) <- c("(Intercept)", X, Z)
+
+    # Construct contents of "predictor_model" slot
+    modY <- list(distY = distY,
+                 mean = modY_mean)
+
+    # Remove outcome model parameters/standard errors
     param_est <- param_est[-c(1:dim_beta)]
     param_se <- param_se[-c(1:dim_beta)]
+    param_rob_se <- param_rob_se[-c(1:dim_beta)]
   }
 
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
   if (distX %in% c("normal", "log-normal")) {
+    # Create coefficients dataframe for predictor model
+    ## Mean parameter (linear function of Z)
     dim_eta <- length(Z) + 1
-    modX_est <- param_est[1:dim_eta]
-    modX_se <- param_se[1:dim_eta]
-    modX_coeff <- data.frame(coeff = modX_est,
-                             se = modX_se)
-    rownames(modX_coeff) <- c("(Intercept)", Z)
+    modX_mean_est <- param_est[1:dim_eta]
+    modX_mean_se <- param_se[1:dim_eta]
+    modX_mean_rse <- param_rob_se[1:dim_eta]
+    modX_mean <- data.frame(coeff = modX_mean_est,
+                            se = modX_mean_se,
+                            robse = modX_mean_rse)
+    rownames(modX_mean) <- c("(Intercept)", Z)
+
+    ## Error variance parameter (estimated directly)
     modX_sigma2 <- param_est[dim_eta + 1] ^ 2
+
+    # Construct contents of "predictor_model" slot
     modX <- list(distX = distX,
-                 mean = modX_coeff,
+                 mean = modX_mean,
                  sigma2 = modX_sigma2)
   } else if (distX %in% c("gamma", "inverse-gaussian")) {
+    # Create coefficients dataframe for predictor model
+    ## Shape parameter (estimated directly)
     modX_shape_est <- param_est[1]
     modX_shape_se <- param_se[1]
+    modX_shape_rse <- param_rob_se[1]
     modX_shape <- data.frame(coeff = modX_shape_est,
-                             se = modX_shape_se)
+                             se = modX_shape_se,
+                             robse = modX_shape_rse)
     rownames(modX_shape) <- c("(Intercept)")
     param_est <- param_est[-1]
     param_se <- param_se[-1]
+    param_rob_se <- param_rob_se[-1]
 
+    ## Mean parameter (linear function of Z)
     dim_eta <- length(Z) + 1
-    modX_est <- param_est[1:dim_eta]
-    modX_se <- param_se[1:dim_eta]
-    modX_coeff <- data.frame(coeff = modX_est,
-                             se = modX_se)
-    rownames(modX_coeff) <- c("(Intercept)", Z)
+    modX_mean_est <- param_est[1:dim_eta]
+    modX_mean_se <- param_se[1:dim_eta]
+    modX_mean_rse <- param_rob_se[1:dim_eta]
+    modX_mean <- data.frame(coeff = modX_mean_est,
+                            se = modX_mean_se,
+                            robse = modX_mean_rse)
+    rownames(modX_mean) <- c("(Intercept)", Z)
 
+    # Construct contents of "predictor_model" slot
     modX <- list(distX = distX,
-                 mean = modX_coeff,
+                 mean = modX_mean,
                  shape = modX_shape)
   } else if (distX == "weibull") {
+    ## Shape parameter (estimated directly)
     modX_shape_est <- param_est[1]
     modX_shape_se <- param_se[1]
+    modX_shape_rse <- param_rob_se[1]
     modX_shape <- data.frame(coeff = modX_shape_est,
-                             se = modX_shape_se)
+                             se = modX_shape_se,
+                             robse = modX_shape_rse)
     rownames(modX_shape) <- c("(Intercept)")
     param_est <- param_est[-1]
     param_se <- param_se[-1]
+    param_rob_se <- param_rob_se[-1]
 
+    ## Scale parameter (linear function of Z)
     dim_eta <- (length(Z) + 1)
-    modX_est <- param_est[1:dim_eta]
-    modX_se <- param_se[1:dim_eta]
-    modX_coeff <- data.frame(coeff = modX_est,
-                             se = modX_se)
-    rownames(modX_coeff) <- c("(Intercept)", Z)
+    modX_scale_est <- param_est[1:dim_eta]
+    modX_scale_se <- param_se[1:dim_eta]
+    modX_scale_rse <- param_rob_se[1:dim_eta]
+    modX_scale <- data.frame(coeff = modX_scale_est,
+                             se = modX_scale_se,
+                             robse = modX_scale_rse)
+    rownames(modX_scale) <- c("(Intercept)", Z)
 
+    # Construct contents of "predictor_model" slot
     modX <- list(distX = distX,
-                 scale = modX_coeff,
+                 scale = modX_scale,
                  shape = modX_shape)
   } else if (distX %in% c("exponential", "poisson")) {
+    ## Rate parameter (linear function of Z)
     dim_eta <- length(Z) + 1
-    modX_est <- param_est[1:dim_eta]
-    modX_se <- param_se[1:dim_eta]
-    modX_coeff <- data.frame(coeff = modX_est,
-                             se = modX_se)
-    rownames(modX_coeff) <- c("(Intercept)", Z)
+    modX_rate_est <- param_est[1:dim_eta]
+    modX_rate_se <- param_se[1:dim_eta]
+    modX_rate_rse <- param_rob_se[1:dim_eta]
+    modX_rate <- data.frame(coeff = modX_rate_est,
+                            se = modX_rate_se,
+                            robse = modX_rate_rse)
+    rownames(modX_rate) <- c("(Intercept)", Z)
+
+    # Construct contents of "predictor_model" slot
     modX <- list(distX = distX,
-                 rate = modX_coeff)
+                 rate = modX_rate)
   }
 
+  # Return model results in a list
   return(list(outcome_model = modY,
               predictor_model = modX,
-              code = mod$code))
+              code = mod$code,
+              vcov = param_vcov,
+              rvcov = param_rob_vcov
+              )
+         )
 }
