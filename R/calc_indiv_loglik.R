@@ -1,19 +1,19 @@
-#' Calculate individual observations' log-likelihood contributions 
+#' Calculate individual observations' log-likelihood contributions
 #'
-#' @param params Parameter values.
-#' @param Y Name of outcome variable.
-#' @param X Name of censored predictor variable.
-#' @param W Name of observed (i.e., censored) version of \code{X}.
-#' @param D Name of event indicator, defined to be = 1 if \code{X} was uncensored.
-#' @param Z (Optional) name(s) of additional fully observed covariates. Default is \code{NULL}
-#' @param partX Size of partition of unobserved \code{X} for censored subjects. Default is \code{50}.
-#' @param distY Distribution assumed for \code{Y} given \code{X} and \code{Z}.
-#' @param distX Distribution assumed for \code{X} given \code{Z}.
-#' @param data A dataframe containing at least columns \code{Y}, \code{X}, \code{W}, \code{D}, and \code{Z} (if applicable).
+#' @param params parameter values.
+#' @param Y name of outcome variable.
+#' @param X name of censored predictor variable.
+#' @param W name of observed (censored) version of \code{X}.
+#' @param D name of event indicator, defined to be \code{= 1} if \code{X} was uncensored and \code{0} otherwise.
+#' @param Z (optional) name(s) of additional fully observed covariates. If none, \code{Z = NULL} (the default).
+#' @param data a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.
+#' @param subdivisions (fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.
+#' @param distY distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.
+#' @param distX distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"inverse-gaussian"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.
 #' @export
 #' @return A vector containing the log-likelihood contributions of the rows/observations in \code{data}.
 #'
-calc_indiv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY, distX, data) {
+calc_indiv_loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY, distX) {
   ####################################################
   # Pre-processing ###################################
   ####################################################
@@ -42,7 +42,7 @@ calc_indiv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY, d
     # ------------------------------ Subset parameters
   }
   pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y], x = uncens_data[, X], z = uncens_data[, Z], distY = distY, beta_params = beta_params)
-  
+
   ####################################################
   # Predictor model P(X|Z) ###########################
   ####################################################
@@ -92,14 +92,14 @@ calc_indiv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY, d
     if (any(rateX <= 0)) { return (99999) }
   }
   pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-  
+
   ####################################################
   # Calculate joint density P(Y,X,Z) #################
   ####################################################
   uncens_data <- cbind(uncens_data, jointP = 1)
   uncens_data[, "jointP"] <- pYgivXZ * pXgivZ
   #uncens_data <- data.frame(cbind(uncens_data, jointP = pYgivXZ * pXgivZ))
-  
+
   ####################################################
   # Calculate the log-likelihood #####################
   ####################################################
@@ -112,12 +112,12 @@ calc_indiv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY, d
     # Analysis model P(Y|X,Z) ##########################
     ####################################################
     pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
-    
+
     ####################################################
     # Predictor model P(X|Z) ###########################
     ####################################################
     pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
-    
+
     ####################################################
     # Joint density P(Y,X,Z) ###########################
     ####################################################
@@ -126,7 +126,7 @@ calc_indiv_loglik <- function(params, Y, X, W, D, Z = NULL, partX = 50, distY, d
   integrate_joint_dens <- function(data_row) {
     data_row <- data.frame(t(data_row))
     return(
-      tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = partX,
+      tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = subdivisions,
                                 Yi = data_row[Y], Zi = data_row[, Z])$value,
                error = function(err) {0})
     )
