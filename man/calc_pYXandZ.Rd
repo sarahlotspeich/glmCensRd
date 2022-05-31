@@ -4,7 +4,7 @@
 \alias{calc_pYXandZ}
 \title{Calculate P(Y,X,Z) = P(Y|X,Z)P(X|Z)}
 \usage{
-calc_pYXandZ(y, x, z = NULL, distY, beta_params, distX, eta_params)
+calc_pYXandZ(y, x, z = NULL, distY, distX, params)
 }
 \arguments{
 \item{y}{Outcome values (scalar or vector).}
@@ -15,11 +15,9 @@ calc_pYXandZ(y, x, z = NULL, distY, beta_params, distX, eta_params)
 
 \item{distY}{Distribution assumed for \code{y} given \code{x} and \code{z}.}
 
-\item{beta_params}{Vector of model parameters.}
-
 \item{distX}{Distribution assumed for \code{x} given \code{z}.}
 
-\item{eta_params}{Vector of model parameters.}
+\item{params}{parameter values.}
 }
 \value{
 A scalar or numeric vector the same length as the data input
