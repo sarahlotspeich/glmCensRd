@@ -4,7 +4,7 @@
 \alias{cc_loglik}
 \title{Complete-case log-likelihood}
 \usage{
-cc_loglik(params, Y, X, Z, data, distY = "normal", distX = "normal")
+cc_loglik(params, Y, X, Z = NULL, data, distY = "normal", distX = "normal")
 }
 \arguments{
 \item{params}{parameter values.}
