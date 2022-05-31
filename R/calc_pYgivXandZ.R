@@ -55,7 +55,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     # pYgivXZ <- exp(- (1 - y) * meanY) / (1 + exp(meanY))
     # pYgivXZ <- dbinom(x = as.numeric(y), size = 1, prob = 1 / (1 + exp(- meanY)))
     # -------------------------------------- Calculate
-  } else if (distX == "weibull") {
+  } else if (distY == "weibull") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
     shapeY <- beta_params[1]
