@@ -58,7 +58,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
   } else if (distY == "weibull") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
-    shapeY <- beta_params[1]
+    shapeY <- exp(beta_params[1])
     ## Construct scale -------------------------------
     scaleY <- beta_params[2] + beta_params[3] * x
     if (!is.null(z)) {
@@ -71,8 +71,13 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    pYgivXZ <- dweibull(x = y, shape = shapeY, scale = scaleY)
+    suppressWarnings(
+      pYgivXZ <- dweibull(x = y, shape = shapeY, scale = scaleY)
+    )
     # -------------------------------------- Calculate
+    # Check: shape and scale of Weibull > 0 ----------
+    pYgivXZ[scaleY <= 0] <- NA
+    # ---------- Check: shape and scale of Weibull > 0
   } else if (distY %in% c("exponential", "poisson")) {
     # Get parameters ---------------------------------
     ## Construct rate  -------------------------------
@@ -88,11 +93,18 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
     if (distX == "exponential") {
-      pYgivXZ <- dexp(x = y, rate = rateY)
+      suppressWarnings(
+        pYgivXZ <- dexp(x = y, rate = rateY)
+      )
     } else {
-      pYgivXZ <- dpois(x = y, lambda = rateY)
+      suppressWarnings(
+        pYgivXZ <- dpois(x = y, lambda = rateY)
+      )
     }
     # -------------------------------------- Calculate
+    # Check: rate of exponential/Poisson > 0 ---------
+    pYgivXZ[rateY <= 0] <- NA
+    # --------- Check: rate of exponential/Poisson > 0
   }
   return(pYgivXZ)
 }
