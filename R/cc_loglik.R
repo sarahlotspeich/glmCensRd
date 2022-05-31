@@ -17,8 +17,8 @@ cc_loglik <- function(params, Y, X, W, Z = NULL, data, distY = "normal", distX =
   ####################################################
   # Joint density P(Y,X,Z) ###########################
   ####################################################
-  pYXandZ <- calc_pYXandZ(y = data[, Y],
-                          x = data[, X],
+  pYXandZ <- calc_pYXandZ(x = data[, X],
+                          y = data[, Y],
                           z = data[, Z],
                           distY = distY,
                           distX = distX,
