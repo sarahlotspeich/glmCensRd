@@ -47,7 +47,6 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                   p = params0_n,
                   Y = Y,
                   X = X,
-                  W = W,
                   Z = Z,
                   data = data[data[, D] == 1, ],
                   distY = distY,
