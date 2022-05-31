@@ -23,8 +23,6 @@
 #' @export
 #'
 glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal", robcov = TRUE, subdivisions = 50, steptol = 1E-2, iterlim = 100, verbose = FALSE) {
-  print(c(Y, W, D, Z))
-
   # Subset data to relevant, user-specified columns
   data <- data[, c(Y, W, D, Z)]
 
@@ -43,6 +41,9 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                          distX = distX)
 
   # Initial parameter values
+  if (verbose) {
+    print("Fit complete-case initial values:")
+  }
   ## Use complete-case MLE
   suppressWarnings(
     cc_mod <- nlm(f = cc_loglik,
@@ -64,10 +65,12 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
     params0_cc <- params0_n
   }
   if (verbose) {
-    print("Fit complete-case initial values:")
-    print(params0_cc)
+    print(cc_mod)
   }
 
+  if (verbose) {
+    print("Fit full MLE:")
+  }
   suppressWarnings(
     mod <- nlm(f = loglik,
                p = params0_cc,
@@ -93,7 +96,6 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
   param_se <- sqrt(diag(param_vcov))
 
   if (verbose) {
-    print("Fit full MLE:")
     print(mod)
   }
 
