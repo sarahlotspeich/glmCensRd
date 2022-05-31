@@ -45,6 +45,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
+    # pYgivXZ_1 <-
     # pYgivXZ <- exp(- (1 - y) * meanY) / (1 + exp(meanY))
     # pYgivXZ <- dbinom(x = as.numeric(y), size = 1, prob = 1 / (1 + exp(- meanY)))
     # -------------------------------------- Calculate
