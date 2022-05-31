@@ -13,13 +13,13 @@
 #' @return A scalar of the log-likelihood function (negated for use with \code{nlm}()).
 #'
 cc_loglik <- function(params, Y, X, Z, data, distY = "normal", distX = "normal") {
-  print(c(Y, X, Z))
   ####################################################
   # Joint density P(Y,X,Z) ###########################
   ####################################################
   pYXandZ <- calc_pYXandZ(x = data[, X],
                           y = data[, Y],
                           z = data[, Z],
+                          lengthZ = length(Z),
                           distY = distY,
                           distX = distX,
                           params = params)
