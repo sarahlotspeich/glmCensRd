@@ -40,6 +40,10 @@ loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY
     # Subset parameters ------------------------------
     beta_params <- params[1:(2 + length(Z))]
     # ------------------------------ Subset parameters
+  } else if (distY == "poisson") {
+    # Subset parameters ------------------------------
+    beta_params <- params[1:(2 + length(Z))]
+    # ------------------------------ Subset parameters
   }
   pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y],
                              x = uncens_data[, X],
