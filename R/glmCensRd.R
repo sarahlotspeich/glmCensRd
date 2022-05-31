@@ -34,26 +34,37 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
   ## Define column X variable name
   X <- "X"
 
-  # Initial parameter values
-  if (distY %in% c("normal", "log-normal")) {
-    params0 <- c(rep(0, length(c(1, X, Z))), 1)
-  } else if (distY == "binomial") {
-    params0 <- c(rep(0, length(c(1, X, Z))))
-  }
+  # Naive initial params (for complete-case)
+  params0_n <- init_vals(Z = Z,
+                         distY = distY,
+                         distX = distX)
 
-  if (distX %in% c("normal", "log-normal")) {
-    params0 <- c(params0, rep(0, length(c(1, Z))), 1)
-  } else if (distX %in% c('gamma', "inverse-gaussian")) {
-    params0 <- c(params0, 1E-4, rep(1E-4, length(c(1, Z))))
-  } else if (distX == "weibull") {
-    params0 <- c(params0, 1E-4, rep(1E-4, length(c(1, Z))))
-  } else if (distX %in% c("exponential", "poisson")) {
-    params0 <- c(params0, rep(1E-4, length(c(1, Z))))
+  # Initial parameter values
+  ## Use complete-case MLE
+  suppressWarnings(
+    cc_mod <- nlm(f = cc_loglik,
+                  p = params0_n,
+                  steptol = steptol,
+                  iterlim = iterlim,
+                  hessian = FALSE,
+                  Y = Y,
+                  X = X,
+                  W = W,
+                  Z = Z,
+                  data = data,
+                  distY = distY,
+                  distX = distX
+                  )
+    )
+  if (cc_mod$code <= 2) {
+    params0_cc <- cc_mod$estimate
+  } else {
+
   }
 
   suppressWarnings(
     mod <- nlm(f = loglik,
-               p = params0,
+               p = params0_cc,
                steptol = steptol,
                iterlim = iterlim,
                hessian = TRUE,
@@ -63,9 +74,9 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                W = W,
                Z = Z,
                subdivisions = subdivisions,
+               data = data,
                distY = distY,
-               distX = distX,
-               data = data)
+               distX = distX)
   )
   param_est <- mod$estimate
   param_vcov <- tryCatch(expr = solve(mod$hessian),
