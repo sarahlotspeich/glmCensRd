@@ -35,7 +35,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
   X <- "X"
 
   # Initial parameter values
-  if (distY == "normal") {
+  if (distY %in% c("normal", "log-normal")) {
     params0 <- c(rep(0, length(c(1, X, Z))), 1)
   } else if (distY == "binomial") {
     params0 <- c(rep(0, length(c(1, X, Z))))
