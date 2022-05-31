@@ -55,6 +55,24 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     # pYgivXZ <- exp(- (1 - y) * meanY) / (1 + exp(meanY))
     # pYgivXZ <- dbinom(x = as.numeric(y), size = 1, prob = 1 / (1 + exp(- meanY)))
     # -------------------------------------- Calculate
+  } else if (distX == "weibull") {
+    # Get parameters ---------------------------------
+    ## Estimate shape directly -----------------------
+    shapeY <- beta_params[1]
+    ## Construct scale -------------------------------
+    scaleY <- beta_params[2] + beta_params[3] * x
+    if (!is.null(z)) {
+      beta2 <- beta_params[-c(1:3)]
+      if (length(eta1) == 1) {
+        scaleY <- scaleY + beta2 * z
+      } else {
+        scaleY <- scaleY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
+      }
+    }
+    # --------------------------------- Get parameters
+    # Calculate --------------------------------------
+    pYgivXZ <- dweibull(x = y, shape = shapeY, scale = scaleY)
+    # -------------------------------------- Calculate
   } else if (distY %in% c("exponential", "poisson")) {
     # Get parameters ---------------------------------
     ## Construct rate  -------------------------------
