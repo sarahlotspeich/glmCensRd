@@ -23,6 +23,8 @@
 #' @export
 #'
 glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal", robcov = TRUE, subdivisions = 50, steptol = 1E-2, iterlim = 100, verbose = FALSE) {
+  print(c(Y, W, D, Z))
+
   # Subset data to relevant, user-specified columns
   data <- data[, c(Y, W, D, Z)]
 
