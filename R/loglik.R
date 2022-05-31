@@ -31,119 +31,53 @@ loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY
   # Create subset of censored subjects' data -------
   cens_data <- data[-c(1:n1), ]
   # ------- Create subset of censored subjects' data
+
   ####################################################
-  # Analysis model P(Y|X,Z) ##########################
+  # Joint density P(Y,X,Z) ###########################
   ####################################################
-  if (distY == "normal") {
-    # Subset parameters ------------------------------
-    beta_params <- params[1:(3 + length(Z))]
-    # ------------------------------ Subset parameters
-  } else if (distY == "binomial") {
-    # Subset parameters ------------------------------
-    beta_params <- params[1:(2 + length(Z))]
-    # ------------------------------ Subset parameters
+  pYXandZ_uncens <- calc_pYXandZ(x = uncens_data[, X],
+                                 y = uncens_data[, Y],
+                                 z = uncens_data[, Z],
+                                 distY = distY,
+                                 distX = distX,
+                                 params = params)
+
+  ####################################################
+  # Likelihood (Uncensored) ##########################
+  ####################################################
+  if (any(is.na(pYXandZ_uncens))) {
+    # If params are out of domain, calc_pYXandZ returns NA
+    ## And the log-likelihood needs to be arbitrarily "huge"
+    return(1E8)
+  } else {
+    ll <- sum(log(pYXandZ_uncens))
   }
-  pYgivXZ <- calc_pYgivXandZ(y = uncens_data[, Y],
-                             x = uncens_data[, X],
-                             z = uncens_data[, Z],
-                             distY = distY,
-                             beta_params = beta_params)
 
   ####################################################
-  # Predictor model P(X|Z) ###########################
+  # Likelihood (Censored) ############################
   ####################################################
-  # Subset parameters --------------------------------
-  eta_params <- params[-c(1:length(beta_params))]
-  # -------------------------------- Subset parameters
-  # Check for parameters outside domain --------------
-  if (distX == "gamma") {
-    # Shape and scale of Gamma > 0 -------------------
-    shapeX <- eta_params[1]
-    meanX <- eta_params[2]
-    if (length(Z) > 0) {
-      meanX <- meanX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta_params[3:(2 + length(Z))], ncol = 1))
-    }
-    scaleX <- meanX / shapeX
-    if (any(c(shapeX, scaleX) <= 0)) { return(99999)}
-    # ------------------- Shape and scale of Gamma > 0
-  } else if (distX == "inverse-gaussian") {
-    # Shape and mean of inverse-Gaussian both > 0 ----
-    shapeX <- eta_params[1]
-    meanX <- eta_params[2]
-    if (length(Z) > 0) {
-      meanX <- meanX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta_params[3:(2 + length(Z))], ncol = 1))
-    }
-    if (any(c(shapeX, meanX) <= 0)) { return(99999)}
-    # --------------------------------- Get parameters
-  } else if (distX == "weibull") {
-    # Shape and scale of Weibull both > 0 ------------
-    shapeX <- eta_params[1]
-    scaleX <- eta_params[2]
-    if (length(Z) > 0) {
-      eta1 <- eta_params[3:(2 + length(Z))]
-      scaleX <- scaleX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
-    }
-    if (any(c(shapeX, scaleX) <= 0)) { return(99999)}
-  } else if (distX %in% c("exponential", "poisson")) {
-    # Rate of Exponential or Poisson > 0 -------------
-    rateX <- eta_params[1]
-    if (length(Z) > 0) {
-      eta1 <- eta_params[2:(1 + length(Z))]
-      if (length(eta1) == 1) {
-        rateX <- rateX + eta1 * uncens_data[, Z]
-      } else {
-        rateX <- rateX + as.numeric(data.matrix(uncens_data[, Z]) %*% matrix(data = eta1, ncol = 1))
-      }
-    }
-    if (any(rateX <= 0)) { return (99999) }
-  }
-  pXgivZ <- calc_pXgivZ(x = uncens_data[, X], z = uncens_data[, Z], distX = distX, eta_params = eta_params)
-
-  ####################################################
-  # Calculate joint density P(Y,X,Z) #################
-  ####################################################
-  uncens_data <- cbind(uncens_data, jointP = 1)
-  uncens_data[, "jointP"] <- pYgivXZ * pXgivZ
-  #uncens_data <- data.frame(cbind(uncens_data, jointP = pYgivXZ * pXgivZ))
-
-  ####################################################
-  # Calculate the log-likelihood #####################
-  ####################################################
-  # Log-likelihood contribution of uncensored X ------
-  ll <- sum(log(uncens_data[, "jointP"]))
-  # ------ Log-likelihood contribution of uncensored X
-
   if (nrow(cens_data) > 0) {
-    # Log-likelihood contribution of censored X --------
-    joint_dens <- function(x, Yi, Zi) {
-      ####################################################
-      # Analysis model P(Y|X,Z) ##########################
-      ####################################################
-      pYgivXZ <- calc_pYgivXandZ(y = Yi, x = x, z = Zi, distY = distY, beta_params = beta_params)
-
-      ####################################################
-      # Predictor model P(X|Z) ###########################
-      ####################################################
-      pXgivZ <- calc_pXgivZ(x = x, z = Zi, distX = distX, eta_params = eta_params)
-
-      ####################################################
-      # Joint density P(Y,X,Z) ###########################
-      ####################################################
-      return(pYgivXZ * pXgivZ)
-    }
-    integrate_joint_dens <- function(data_row) {
+    integrate_pYXandZ <- function(data_row) {
       data_row <- data.frame(t(data_row))
       return(
-        tryCatch(expr = integrate(f = joint_dens, lower = data_row[, W], upper = Inf, subdivisions = subdivisions,
-                                  Yi = data_row[, Y], Zi = data_row[, Z])$value,
+        tryCatch(expr = integrate(f = calc_pYXandZ,
+                                  lower = data_row[, W],
+                                  upper = Inf,
+                                  subdivisions = subdivisions,
+                                  y = uncens_data[, Y],
+                                  z = uncens_data[, Z],
+                                  distY = distY,
+                                  distX = distX,
+                                  params = params)$value,
                  error = function(err) {0})
       )
     }
-    integral <- apply(X = cens_data, MARGIN = 1, FUN = integrate_joint_dens)
-    log_integral <- log(integral)
-    log_integral[log_integral == -Inf] <- 0
-    ll <- ll + sum(log_integral)
-    # -------- Log-likelihood contribution of censored X
+    int_pYXandZ_cens <- apply(X = cens_data,
+                              MARGIN = 1,
+                              FUN = integrate_pYXandZ)
+    log_int_pYXandZ_cens <- log(int_pYXandZ_cens)
+    log_int_pYXandZ_cens[log_int_pYXandZ_cens == -Inf] <- 0
+    ll <- ll + sum(log_int_pYXandZ_cens)
   }
 
   # Return (-1) x log-likelihood for use with nlm() --
