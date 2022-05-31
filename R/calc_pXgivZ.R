@@ -40,7 +40,7 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
   } else if (distX == "gamma") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
-    shapeX <- eta_params[1]
+    shapeX <- exp(eta_params[1])
     ## Construct mean --------------------------------
     meanX <- eta_params[2]
     if (!is.null(z)) {
@@ -56,12 +56,17 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
     # pXgivZ <- (1 / gamma(shapeX)) * scaleX ^ (- shapeX) * (x ^ (shapeX - 1)) * exp(- x / scaleX)
-    pXgivZ <- dgamma(x = x, shape = shapeX, scale = scaleX)
+    suppressWarnings(
+      pXgivZ <- dgamma(x = x, shape = shapeX, scale = scaleX)
+    )
     # -------------------------------------- Calculate
+    # Check: shape and scale of Gamma > 0 ------------
+    pXgivZ[scaleX <= 0] <- NA
+    # ------------ Check: shape and scale of Gamma > 0
   } else if (distX == "inverse-gaussian") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
-    shapeX <- eta_params[1]
+    shapeX <- exp(eta_params[1])
     ## Construct the mean ----------------------------
     meanX <- eta_params[2]
     if (!is.null(z)) {
@@ -75,12 +80,17 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
     # pXgivZ <- sqrt((shapeX / (2 * pi * x ^ 3))) * exp(- (shapeX * (x - meanX) ^ 2) / (2 * meanX ^ 2 * x))
-    pXgivZ <- dinvGauss(x = x, lambda = shapeX, nu = meanX)
+    suppressWarnings(
+      pXgivZ <- dinvGauss(x = x, lambda = shapeX, nu = meanX)
+    )
     # -------------------------------------- Calculate
+    # Check: shape and mean of inverse-Gaussian > 0 --
+    pXgivZ[meanX <= 0] <- NA
+    # -- Check: shape and mean of inverse-Gaussian > 0
   } else if (distX == "weibull") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
-    shapeX <- eta_params[1]
+    shapeX <- exp(eta_params[1])
     ## Construct scale -------------------------------
     scaleX <- eta_params[2]
     if (!is.null(z)) {
@@ -94,8 +104,13 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
     # pXgivZ <- (shapeX / scaleX) * ((x / scaleX) ^ (shapeX - 1)) * exp(- (x / scaleX) ^ shapeX)
-    pXgivZ <- dweibull(x = x, shape = shapeX, scale = scaleX)
+    suppressWarnings(
+      pXgivZ <- dweibull(x = x, shape = shapeX, scale = scaleX)
+    )
     # -------------------------------------- Calculate
+    # Check: shape and scale of Weibull > 0 ----------
+    pXgivZ[scaleX <= 0] <- NA
+    # ---------- Check: shape and scale of Weibull > 0
   } else if (distX %in% c("exponential", "poisson")) {
     # Get parameters ---------------------------------
     ## Construct rate  -------------------------------
@@ -112,12 +127,19 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     # Calculate --------------------------------------
     if (distX == "exponential") {
       # pXgivZ <- rateX * exp(- rateX * x)
-      pXgivZ <- dexp(x = x, rate = rateX)
+      suppressWarnings(
+        pXgivZ <- dexp(x = x, rate = rateX)
+      )
     } else {
       # pXgivZ <- rateX ^ x * exp(- rateX) / factorial(x)
-      pXgivZ <- dpois(x = x, lambda = rateX)
+      suppressWarnings(
+        pXgivZ <- dpois(x = x, lambda = rateX)
+      )
     }
     # -------------------------------------- Calculate
+    # Check: rate of exponential/Poisson > 0 ---------
+    pXgivZ[rateX <= 0] <- NA
+    # --------- Check: rate of exponential/Poisson > 0
   }
   return(pXgivZ)
 }
