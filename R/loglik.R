@@ -38,6 +38,7 @@ loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY
   pYXandZ_uncens <- calc_pYXandZ(x = uncens_data[, X],
                                  y = uncens_data[, Y],
                                  z = uncens_data[, Z],
+                                 lengthZ = length(Z),
                                  distY = distY,
                                  distX = distX,
                                  params = params)
