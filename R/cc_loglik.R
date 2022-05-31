@@ -24,16 +24,16 @@ cc_loglik <- function(params, Y, X, W, Z = NULL, data, distY = "normal", distX =
                           distX = distX,
                           params = params)
 
-  # If params are out of domain, calc_pYXandZ returns 1E8
-  if (any(is.na(pYXandZ))) {
-    return(1E8)
-  }
-
   ####################################################
   # Likelihood #######################################
   ####################################################
-  ll <- sum(log(pYXandZ))
-
-  # Return (-1) x log-likelihood for use with nlm() --
-  return(- ll)
+  if (any(is.na(pYXandZ))) {
+    # If params are out of domain, calc_pYXandZ returns NA
+    ## And the log-likelihood needs to be arbitrarily "huge"
+    return(1E8)
+  } else {
+    ll <- sum(log(pYXandZ))
+    # Return (-1) x log-likelihood for use with nlm() --
+    return(- ll)
+  }
 }
