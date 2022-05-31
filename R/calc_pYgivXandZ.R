@@ -58,26 +58,31 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
   } else if (distY == "weibull") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
-    shapeY <- exp(beta_params[1])
-    ## Construct scale -------------------------------
-    scaleY <- beta_params[2] + beta_params[3] * x
-    if (!is.null(z)) {
-      beta2 <- beta_params[-c(1:3)]
-      if (length(eta1) == 1) {
-        scaleY <- scaleY + beta2 * z
-      } else {
-        scaleY <- scaleY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
+    shapeY <- beta_params[1]
+
+    # Check 1: shape of Weibull > 0 ------------------
+    if (shapeY <= 0) {
+      pYgivXZ <- rep(NA, length(y))
+    } else {
+      ## Construct scale -------------------------------
+      scaleY <- beta_params[2] + beta_params[3] * x
+      if (!is.null(z)) {
+        beta2 <- beta_params[-c(1:3)]
+        if (length(eta1) == 1) {
+          scaleY <- scaleY + beta2 * z
+        } else {
+          scaleY <- scaleY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
+        }
       }
+      # --------------------------------- Get parameters
+      # Calculate --------------------------------------
+      suppressWarnings(
+        pYgivXZ <- dweibull(x = y, shape = shapeY, scale = scaleY)
+      )
+      # -------------------------------------- Calculate
+      # Check 2: scale of Weibull > 0 ----------------
+      pYgivXZ[scaleY <= 0] <- NA
     }
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    suppressWarnings(
-      pYgivXZ <- dweibull(x = y, shape = shapeY, scale = scaleY)
-    )
-    # -------------------------------------- Calculate
-    # Check: shape and scale of Weibull > 0 ----------
-    pYgivXZ[scaleY <= 0] <- NA
-    # ---------- Check: shape and scale of Weibull > 0
   } else if (distY %in% c("exponential", "poisson")) {
     # Get parameters ---------------------------------
     ## Construct rate  -------------------------------
