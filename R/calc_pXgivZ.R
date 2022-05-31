@@ -5,10 +5,11 @@
 #' @param distX Distribution assumed for \code{x} given \code{z}.
 #' @param eta_params Vector of model parameters.
 #'
-#' @return A scalar or numeric vector the same length as the data input
+#' @importFrom SuppDists dinvGauss
 #'
 #' @export
 #'
+#' @return A scalar or numeric vector the same length as the data input
 #'
 calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
   if (distX %in% c("normal", "log-normal")) {
@@ -73,7 +74,8 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    pXgivZ <- sqrt((shapeX / (2 * pi * x ^ 3))) * exp(- (shapeX * (x - meanX) ^ 2) / (2 * meanX ^ 2 * x))
+    # pXgivZ <- sqrt((shapeX / (2 * pi * x ^ 3))) * exp(- (shapeX * (x - meanX) ^ 2) / (2 * meanX ^ 2 * x))
+    pXgivZ <- dinvGauss(x = x, lambda = shapeX, nu = meanX)
     # -------------------------------------- Calculate
   } else if (distX == "weibull") {
     # Get parameters ---------------------------------
