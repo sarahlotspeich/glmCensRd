@@ -4,7 +4,7 @@
 \alias{calc_pYXandZ}
 \title{Calculate P(Y,X,Z) = P(Y|X,Z)P(X|Z)}
 \usage{
-calc_pYXandZ(x, y, z = NULL, distY, distX, params)
+calc_pYXandZ(x, y, z = NULL, lengthZ = 0, distY, distX, params)
 }
 \arguments{
 \item{x}{predictor values (scalar or vector).}
@@ -12,6 +12,8 @@ calc_pYXandZ(x, y, z = NULL, distY, distX, params)
 \item{y}{outcome values (scalar or vector).}
 
 \item{z}{covariate values (scalar, vector, or dataframe).}
+
+\item{lengthZ}{number of additional covariates. If none (the default), \code{lengthZ = 0}.}
 
 \item{distY}{distribution assumed for \code{y} given \code{x} and \code{z}.}
 

@@ -3,6 +3,7 @@
 #' @param x predictor values (scalar or vector).
 #' @param y outcome values (scalar or vector).
 #' @param z covariate values (scalar, vector, or dataframe).
+#' @param lengthZ number of additional covariates. If none (the default), \code{lengthZ = 0}.
 #' @param distY distribution assumed for \code{y} given \code{x} and \code{z}.
 #' @param distX distribution assumed for \code{x} given \code{z}.
 #' @param params parameter values.
@@ -12,18 +13,18 @@
 #' @export
 #'
 #'
-calc_pYXandZ <- function(x, y, z = NULL, distY, distX, params) {
+calc_pYXandZ <- function(x, y, z = NULL, lengthZ = 0, distY, distX, params) {
   ####################################################
   # Separate params into models ######################
   ####################################################
   # Analysis model ///////////////////////////////////
   if (distY %in% c("normal", "log-normal", "weibull")) {
     # Subset parameters ------------------------------
-    beta_params <- params[1:(3 + length(Z))]
+    beta_params <- params[1:(3 + lengthZ)]
     # ------------------------------ Subset parameters
   } else if (distY %in% c("binomial", "exponential", "poisson")) {
     # Subset parameters ------------------------------
-    beta_params <- params[1:(2 + length(Z))]
+    beta_params <- params[1:(2 + lengthZ)]
     # ------------------------------ Subset parameters
   }
   # Predictor model //////////////////////////////////
