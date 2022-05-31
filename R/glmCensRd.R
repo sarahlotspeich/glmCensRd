@@ -59,7 +59,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
   if (cc_mod$code <= 2 & cc_mod$iterations > 0) {
     params0_cc <- cc_mod$estimate
   } else {
-
+    params0_cc <- params0_n
   }
 
   suppressWarnings(
