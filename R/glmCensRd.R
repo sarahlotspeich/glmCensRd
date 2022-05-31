@@ -11,6 +11,7 @@
 #' @param subdivisions (fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.
 #' @param steptol (fed to \code{nlm}) a positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.
 #' @param iterlim (fed to \code{nlm}) a positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
+#' @param verbose logical. If \code{TRUE}, text is printed to show progress. Default is \code{FALSE}.
 #'
 #' @return A list with the following elements:
 #' \item{outcome_model}{a list containing details of the fitted model for the outcome.}
@@ -21,7 +22,7 @@
 #'
 #' @export
 #'
-glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal", robcov = TRUE, subdivisions = 50, steptol = 1E-2, iterlim = 100) {
+glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal", robcov = TRUE, subdivisions = 50, steptol = 1E-2, iterlim = 100, verbose = FALSE) {
   # Subset data to relevant, user-specified columns
   data <- data[, c(Y, W, D, Z)]
 
@@ -44,16 +45,16 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
   suppressWarnings(
     cc_mod <- nlm(f = cc_loglik,
                   p = params0_n,
-                  steptol = steptol,
-                  iterlim = iterlim,
-                  hessian = FALSE,
                   Y = Y,
                   X = X,
                   W = W,
                   Z = Z,
                   data = data[data[, D] == 1, ],
                   distY = distY,
-                  distX = distX
+                  distX = distX,
+                  steptol = steptol,
+                  iterlim = iterlim,
+                  hessian = FALSE
                   )
     )
   if (cc_mod$code <= 2 & cc_mod$iterations > 0) {
@@ -61,13 +62,14 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
   } else {
     params0_cc <- params0_n
   }
+  if (verbose) {
+    print("Fit complete-case initial values:")
+    print(params0_cc)
+  }
 
   suppressWarnings(
     mod <- nlm(f = loglik,
                p = params0_cc,
-               steptol = steptol,
-               iterlim = iterlim,
-               hessian = TRUE,
                Y = Y,
                X = X,
                D = D,
@@ -76,7 +78,10 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                subdivisions = subdivisions,
                data = data,
                distY = distY,
-               distX = distX)
+               distX = distX,
+               steptol = steptol,
+               iterlim = iterlim,
+               hessian = TRUE)
   )
   param_est <- mod$estimate
   param_vcov <- tryCatch(expr = solve(mod$hessian),
@@ -85,6 +90,11 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                                                     ncol = length(param_est))
                          )
   param_se <- sqrt(diag(param_vcov))
+
+  if (verbose) {
+    print("Fit full MLE:")
+    print(mod)
+  }
 
   if (robcov) {
     # Derivatives of the log-likelihood

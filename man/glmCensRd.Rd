@@ -15,7 +15,8 @@ glmCensRd(
   robcov = TRUE,
   subdivisions = 50,
   steptol = 0.01,
-  iterlim = 100
+  iterlim = 100,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ glmCensRd(
 \item{steptol}{(fed to \code{nlm}) a positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.}
 
 \item{iterlim}{(fed to \code{nlm}) a positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.}
+
+\item{verbose}{logical. If \code{TRUE}, text is printed to show progress. Default is \code{FALSE}.}
 }
 \value{
 A list with the following elements:
