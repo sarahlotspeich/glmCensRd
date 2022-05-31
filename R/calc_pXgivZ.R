@@ -40,29 +40,33 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
   } else if (distX == "gamma") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
-    shapeX <- exp(eta_params[1])
-    ## Construct mean --------------------------------
-    meanX <- eta_params[2]
-    if (!is.null(z)) {
-      eta1 <- eta_params[-c(1:2)]
-      if (length(eta1) == 1) {
-        meanX <- meanX + eta1 * z
-      } else {
-        meanX <- meanX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
+    shapeX <- eta_params[1]
+    # Check 1: shape of Gamma > 0 --------------------
+    if (shapeX <= 0) {
+      pXgivZ <- rep(NA, length(x))
+    } else {
+      ## Construct mean --------------------------------
+      meanX <- eta_params[2]
+      if (!is.null(z)) {
+        eta1 <- eta_params[-c(1:2)]
+        if (length(eta1) == 1) {
+          meanX <- meanX + eta1 * z
+        } else {
+          meanX <- meanX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
+        }
       }
+      ## Construct scale -------------------------------
+      scaleX <- meanX / shapeX
+      # --------------------------------- Get parameters
+      # Calculate --------------------------------------
+      # pXgivZ <- (1 / gamma(shapeX)) * scaleX ^ (- shapeX) * (x ^ (shapeX - 1)) * exp(- x / scaleX)
+      suppressWarnings(
+        pXgivZ <- dgamma(x = x, shape = shapeX, scale = scaleX)
+      )
+      # -------------------------------------- Calculate
+      # Check 2: scale of Gamma > 0 --------------------
+      pXgivZ[scaleX <= 0] <- NA
     }
-    ## Construct scale -------------------------------
-    scaleX <- meanX / shapeX
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    # pXgivZ <- (1 / gamma(shapeX)) * scaleX ^ (- shapeX) * (x ^ (shapeX - 1)) * exp(- x / scaleX)
-    suppressWarnings(
-      pXgivZ <- dgamma(x = x, shape = shapeX, scale = scaleX)
-    )
-    # -------------------------------------- Calculate
-    # Check: shape and scale of Gamma > 0 ------------
-    pXgivZ[scaleX <= 0] <- NA
-    # ------------ Check: shape and scale of Gamma > 0
   } else if (distX == "inverse-gaussian") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
