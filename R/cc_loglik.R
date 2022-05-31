@@ -24,7 +24,7 @@ cc_loglik <- function(params, Y, X, W, Z = NULL, data, distY = "normal", distX =
                           distX = distX,
                           params = params)
 
-  # If params are out of domain, calc_pYXandZ returns
+  # If params are out of domain, calc_pYXandZ returns 1E8
   if (any(is.na(pYXandZ))) {
     return(1E8)
   }
