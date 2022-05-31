@@ -1,10 +1,10 @@
 #' Calculate P(Y,X,Z) = P(Y|X,Z)P(X|Z)
 #'
-#' @param y Outcome values (scalar or vector).
-#' @param x Predictor values (scalar or vector).
-#' @param z Covariate values (scalar, vector, or dataframe).
-#' @param distY Distribution assumed for \code{y} given \code{x} and \code{z}.
-#' @param distX Distribution assumed for \code{x} given \code{z}.
+#' @param x predictor values (scalar or vector).
+#' @param y outcome values (scalar or vector).
+#' @param z covariate values (scalar, vector, or dataframe).
+#' @param distY distribution assumed for \code{y} given \code{x} and \code{z}.
+#' @param distX distribution assumed for \code{x} given \code{z}.
 #' @param params parameter values.
 #'
 #' @return A scalar or numeric vector the same length as the data input
@@ -12,7 +12,7 @@
 #' @export
 #'
 #'
-calc_pYXandZ <- function(y, x, z = NULL, distY, distX, params) {
+calc_pYXandZ <- function(x, y, z = NULL, distY, distX, params) {
   ####################################################
   # Separate params into models ######################
   ####################################################
