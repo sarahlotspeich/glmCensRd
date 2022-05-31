@@ -4,7 +4,7 @@
 \alias{cc_loglik}
 \title{Complete-case log-likelihood}
 \usage{
-cc_loglik(params, Y, X, W, Z = NULL, data, distY = "normal", distX = "normal")
+cc_loglik(params, Y, X, Z = NULL, data, distY = "normal", distX = "normal")
 }
 \arguments{
 \item{params}{parameter values.}
@@ -12,8 +12,6 @@ cc_loglik(params, Y, X, W, Z = NULL, data, distY = "normal", distX = "normal")
 \item{Y}{name of outcome variable.}
 
 \item{X}{name of censored predictor variable.}
-
-\item{W}{name of observed (censored) version of \code{X}.}
 
 \item{Z}{(optional) name(s) of additional fully observed covariates. If none, \code{Z = NULL} (the default).}
 
