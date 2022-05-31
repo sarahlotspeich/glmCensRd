@@ -90,27 +90,31 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
   } else if (distX == "weibull") {
     # Get parameters ---------------------------------
     ## Estimate shape directly -----------------------
-    shapeX <- exp(eta_params[1])
-    ## Construct scale -------------------------------
-    scaleX <- eta_params[2]
-    if (!is.null(z)) {
-      eta1 <- eta_params[-c(1:2)]
-      if (length(eta1) == 1) {
-        scaleX <- scaleX + eta1 * z
-      } else {
-        scaleX <- scaleX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
+    shapeX <- eta_params[1]
+    # Check 1: shape of Weibull > 0 ------------------
+    if (shapeX <= 0) {
+      pXgivZ <- rep(NA, length(x))
+    } else {
+      ## Construct scale -------------------------------
+      scaleX <- eta_params[2]
+      if (!is.null(z)) {
+        eta1 <- eta_params[-c(1:2)]
+        if (length(eta1) == 1) {
+          scaleX <- scaleX + eta1 * z
+        } else {
+          scaleX <- scaleX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
+        }
       }
+      # --------------------------------- Get parameters
+      # Calculate --------------------------------------
+      # pXgivZ <- (shapeX / scaleX) * ((x / scaleX) ^ (shapeX - 1)) * exp(- (x / scaleX) ^ shapeX)
+      suppressWarnings(
+        pXgivZ <- dweibull(x = x, shape = shapeX, scale = scaleX)
+      )
+      # -------------------------------------- Calculate
+      # Check 2: scale of Weibull > 0 ------------------
+      pXgivZ[scaleX <= 0] <- NA
     }
-    # --------------------------------- Get parameters
-    # Calculate --------------------------------------
-    # pXgivZ <- (shapeX / scaleX) * ((x / scaleX) ^ (shapeX - 1)) * exp(- (x / scaleX) ^ shapeX)
-    suppressWarnings(
-      pXgivZ <- dweibull(x = x, shape = shapeX, scale = scaleX)
-    )
-    # -------------------------------------- Calculate
-    # Check: shape and scale of Weibull > 0 ----------
-    pXgivZ[scaleX <= 0] <- NA
-    # ---------- Check: shape and scale of Weibull > 0
   } else if (distX %in% c("exponential", "poisson")) {
     # Get parameters ---------------------------------
     ## Construct rate  -------------------------------
