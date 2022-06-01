@@ -92,7 +92,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
-    if (distX == "exponential") {
+    if (distY == "exponential") {
       suppressWarnings(
         pYgivXZ <- dexp(x = y, rate = rateY)
       )
