@@ -104,7 +104,7 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
       if (!is.null(z)) {
         eta1 <- matrix(data = eta_params[-c(1:2)],
                        ncol = 1)
-        scaleX <- scaleX + as.numeric(eta1 %*% z)
+        scaleX <- scaleX + as.numeric(z %*% eta1)
       }
       # --------------------------------- Get parameters
       # Calculate --------------------------------------
@@ -123,7 +123,7 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     if (!is.null(z)) {
       eta1 <- matrix(data = eta_params[-c(1)],
                      ncol = 1)
-      rateX <- rateX + as.numeric(eta1 %*% z)
+      rateX <- rateX + as.numeric(z %*% eta1)
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
