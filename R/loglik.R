@@ -59,14 +59,17 @@ loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY
   ####################################################
   if (nrow(cens_data) > 0) {
     integrate_pYXandZ <- function(data_row) {
-      data_row <- data.frame(t(data_row))
+      Wi <- as.numeric(data_row[W])
+      Yi <- data_row[Y]
+      Zi <- data_row[Z]
       return(
         tryCatch(expr = integrate(f = calc_pYXandZ,
-                                  lower = data_row[, W],
+                                  lower = Wi,
                                   upper = Inf,
                                   subdivisions = subdivisions,
-                                  y = data_row[, Y],
-                                  z = data_row[, Z],
+                                  y = Yi,
+                                  z = Zi,
+                                  lengthZ = length(Z),
                                   distY = distY,
                                   distX = distX,
                                   params = params)$value,
