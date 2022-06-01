@@ -12,17 +12,20 @@
 #' @return A scalar or numeric vector the same length as the data input
 #'
 calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
+  # Treat as a numeric vector (not dataframe, matrix, etc)
+  x <- as.numeric(x)
+
+  # Treat z as a matrix
+  z <- data.matrix(z)
+
   if (distX %in% c("normal", "log-normal")) {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
     meanX <- eta_params[1]
     if (!is.null(z)) {
-      eta1 <- eta_params[-c(1, length(eta_params))]
-      if (length(eta1) == 1) {
-        meanX <- meanX + eta1 * z
-      } else {
-        meanX <- meanX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-      }
+      eta1 <- matrix(data = eta_params[-c(1, length(eta_params))],
+                     ncol = 1)
+      meanX <- meanX + as.numeric(z %*% eta1)
     }
     ## Estimate sqrt(variance) directly --------------
     sigX <- sqrt(eta_params[length(eta_params)] ^ 2)
@@ -48,12 +51,9 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
       ## Construct mean --------------------------------
       meanX <- eta_params[2]
       if (!is.null(z)) {
-        eta1 <- eta_params[-c(1:2)]
-        if (length(eta1) == 1) {
-          meanX <- meanX + eta1 * z
-        } else {
-          meanX <- meanX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-        }
+        eta1 <- matrix(data = eta_params[-c(1:2)],
+                       ncol = 1)
+        meanX <- meanX + as.numeric(z %*% eta1)
       }
       ## Construct scale -------------------------------
       scaleX <- meanX / shapeX
@@ -77,12 +77,9 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
       ## Construct the mean ----------------------------
       meanX <- eta_params[2]
       if (!is.null(z)) {
-        eta1 <- eta_params[-c(1:2)]
-        if (length(eta1) == 1) {
-          meanX <- meanX + eta1 * z
-        } else {
-          meanX <- meanX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-        }
+        eta1 <- matrix(data = eta_params[-c(1:2)],
+                       ncol = 1)
+        meanX <- meanX + as.numeric(z %*% eta1)
       }
       # --------------------------------- Get parameters
       # Calculate --------------------------------------
@@ -105,12 +102,9 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
       ## Construct scale -------------------------------
       scaleX <- eta_params[2]
       if (!is.null(z)) {
-        eta1 <- eta_params[-c(1:2)]
-        if (length(eta1) == 1) {
-          scaleX <- scaleX + eta1 * z
-        } else {
-          scaleX <- scaleX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-        }
+        eta1 <- matrix(data = eta_params[-c(1:2)],
+                       ncol = 1)
+        scaleX <- scaleX + as.numeric(eta1 %*% z)
       }
       # --------------------------------- Get parameters
       # Calculate --------------------------------------
@@ -127,12 +121,9 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
     ## Construct rate  -------------------------------
     rateX <- eta_params[1]
     if (!is.null(z)) {
-      eta1 <- eta_params[-c(1)]
-      if (length(eta1) == 1) {
-        rateX <- rateX + eta1 * z
-      } else {
-        rateX <- rateX + as.numeric(data.matrix(z) %*% matrix(data = eta1, ncol = 1))
-      }
+      eta1 <- matrix(data = eta_params[-c(1)],
+                     ncol = 1)
+      rateX <- rateX + as.numeric(eta1 %*% z)
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
