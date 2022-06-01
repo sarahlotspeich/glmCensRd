@@ -24,7 +24,8 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     ## Construct mean --------------------------------
     meanY <- beta_params[1] + beta_params[2] * x
     if (!is.null(z)) {
-      beta2 <- matrix(data = beta_params[-c(1:2, length(beta_params))], ncol = 1)
+      beta2 <- matrix(data = beta_params[-c(1:2, length(beta_params))],
+                      ncol = 1)
       meanY <- meanY + as.numeric(z %*% beta2)
     }
     ## Estimate sqrt(variance) directly --------------
@@ -42,14 +43,11 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
   } else if (distY == "binomial") {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
-    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
+    meanY <- beta_params[1] + beta_params[2] * x
     if (!is.null(z)) {
-      beta2 <- beta_params[-c(1:2)]
-      if (length(beta2) == 1) {
-        meanY <- meanY + z
-      } else {
-        meanY <- meanY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
-      }
+      beta2 <- matrix(data = beta_params[-c(1:2)],
+                      ncol = 1)
+      meanY <- meanY + as.numeric(z %*% beta2)
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
@@ -71,6 +69,9 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
       scaleY <- beta_params[2] + beta_params[3] * x
       if (!is.null(z)) {
         beta2 <- beta_params[-c(1:3)]
+        beta2 <- matrix(data = beta_params[-c(1:3))],
+                        ncol = 1)
+
         if (length(beta2) == 1) {
           scaleY <- scaleY + beta2 * z
         } else {
