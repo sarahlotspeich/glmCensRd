@@ -13,8 +13,8 @@ glmCensRd(
   distY = "normal",
   distX = "normal",
   robcov = TRUE,
-  subdivisions = 50,
-  steptol = 0.01,
+  subdivisions = 100,
+  steptol = 1e-06,
   iterlim = 100,
   verbose = FALSE
 )
