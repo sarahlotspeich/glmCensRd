@@ -12,17 +12,20 @@
 #'
 #'
 calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
+  # Treat y and x as numeric vectors (not dataframe, matrix, etc)
+  x <- as.numeric(x)
+  y <- as.numeric(y)
+
+  # Treat z as a matrix
+  z <- data.matrix(z)
+
   if (distY %in% c("normal", "log-normal")) {
     # Get parameters ---------------------------------
     ## Construct mean --------------------------------
-    meanY <- beta_params[1] + beta_params[2] * matrix(data = x, ncol = 1)
+    meanY <- beta_params[1] + beta_params[2] * x
     if (!is.null(z)) {
-      beta2 <- beta_params[-c(1:2, length(beta_params))]
-      if (length(beta2) == 1) {
-        meanY <- meanY + beta2 * z
-      } else {
-        meanY <- meanY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
-      }
+      beta2 <- matrix(data = beta_params[-c(1:2, length(beta_params))], ncol = 1)
+      meanY <- meanY + as.numeric(z %*% beta2)
     }
     ## Estimate sqrt(variance) directly --------------
     sigY <- sqrt(beta_params[length(beta_params)] ^ 2)
@@ -68,7 +71,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
       scaleY <- beta_params[2] + beta_params[3] * x
       if (!is.null(z)) {
         beta2 <- beta_params[-c(1:3)]
-        if (length(beta1) == 1) {
+        if (length(beta2) == 1) {
           scaleY <- scaleY + beta2 * z
         } else {
           scaleY <- scaleY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
