@@ -68,7 +68,7 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
       scaleY <- beta_params[2] + beta_params[3] * x
       if (!is.null(z)) {
         beta2 <- beta_params[-c(1:3)]
-        if (length(eta1) == 1) {
+        if (length(beta1) == 1) {
           scaleY <- scaleY + beta2 * z
         } else {
           scaleY <- scaleY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
