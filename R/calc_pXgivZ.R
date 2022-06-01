@@ -5,8 +5,6 @@
 #' @param distX Distribution assumed for \code{x} given \code{z}.
 #' @param eta_params Vector of model parameters.
 #'
-#' @importFrom SuppDists dinvGauss
-#'
 #' @export
 #'
 #' @return A scalar or numeric vector the same length as the data input
@@ -83,9 +81,9 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
       }
       # --------------------------------- Get parameters
       # Calculate --------------------------------------
-      # pXgivZ <- sqrt((shapeX / (2 * pi * x ^ 3))) * exp(- (shapeX * (x - meanX) ^ 2) / (2 * meanX ^ 2 * x))
       suppressWarnings(
-        pXgivZ <- dinvGauss(x = x, lambda = shapeX, nu = meanX)
+        pXgivZ <- sqrt((shapeX / (2 * pi * x ^ 3))) * exp(- (shapeX * (x - meanX) ^ 2) / (2 * meanX ^ 2 * x))
+        #pXgivZ <- dinvGauss(x = x, lambda = shapeX, nu = meanX)
       )
       # -------------------------------------- Calculate
       # Check: mean of inverse-Gaussian > 0 ------------
