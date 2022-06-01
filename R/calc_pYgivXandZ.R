@@ -86,12 +86,9 @@ calc_pYgivXandZ <- function(y, x, z = NULL, distY, beta_params) {
     ## Construct rate  -------------------------------
     rateY <- beta_params[1] + beta_params[2] * x
     if (!is.null(z)) {
-      beta2 <- beta_params[-c(1:2)]
-      if (length(beta2) == 1) {
-        rateY <- rateY + beta2 * z
-      } else {
-        rateY <- rateY + as.numeric(data.matrix(z) %*% matrix(data = beta2, ncol = 1))
-      }
+      beta2 <- matrix(data = beta_params[-c(1:2)],
+                      ncol = 1)
+      rateY <- rateY + as.numeric(z %*% beta2)
     }
     # --------------------------------- Get parameters
     # Calculate --------------------------------------
