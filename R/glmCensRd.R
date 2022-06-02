@@ -253,7 +253,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
     modY_rate <- data.frame(coeff = modY_rate_est,
                             se = modY_rate_se,
                             robse = modY_rate_rse)
-    rownames(modY_rate) <- c("(Intercept)", Z)
+    rownames(modY_rate) <- c("(Intercept)", X, Z)
 
     # Construct contents of "outcome_model" slot
     modY <- list(distY = distY,
