@@ -157,7 +157,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
   if (distY == "normal") {
     # Create coefficients dataframe for outcome model
     ## Mean parameter (linear function of Z)
-    dim_beta <- length(c(X, Z)) + 1
+    dim_beta <- length(Z) + 2
     modY_mean_est <- param_est[1:dim_beta]
     modY_mean_se <- param_se[1:dim_beta]
     modY_mean_rse <- param_rob_se[1:dim_beta]
@@ -173,15 +173,10 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
     modY <- list(distY = distY,
                  mean = modY_mean,
                  sigma2 = modY_sigma2)
-
-    # Remove outcome model parameters/standard errors
-    param_est <- param_est[-c(1:(dim_beta + 1))]
-    param_se <- param_se[-c(1:(dim_beta + 1))]
-    param_rob_se <- param_rob_se[-c(1:(dim_beta + 1))]
   } else if (distY == "binomial") {
     # Create coefficients dataframe for outcome model
     ## Mean parameter (linear function of Z)
-    dim_beta <- length(c(X, Z)) + 1
+    dim_beta <- length(Z) + 2
     modY_mean_est <- param_est[1:dim_beta]
     modY_mean_se <- param_se[1:dim_beta]
     modY_mean_rse <- param_rob_se[1:dim_beta]
@@ -193,12 +188,81 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
     # Construct contents of "predictor_model" slot
     modY <- list(distY = distY,
                  mean = modY_mean)
+  } else if (distY %in% c("gamma", "inverse-gaussian")) {
+    # Create coefficients dataframe for predictor model
+    ## Shape parameter (estimated directly)
+    modY_shape_est <- param_est[1]
+    modY_shape_se <- param_se[1]
+    modY_shape_rse <- param_rob_se[1]
+    modY_shape <- data.frame(coeff = modY_shape_est,
+                             se = modY_shape_se,
+                             robse = modY_shape_rse)
+    rownames(modY_shape) <- c("(Intercept)")
+    param_est <- param_est[-1]
+    param_se <- param_se[-1]
+    param_rob_se <- param_rob_se[-1]
 
-    # Remove outcome model parameters/standard errors
-    param_est <- param_est[-c(1:dim_beta)]
-    param_se <- param_se[-c(1:dim_beta)]
-    param_rob_se <- param_rob_se[-c(1:dim_beta)]
+    ## Mean parameter (linear function of Z)
+    dim_beta <- length(Z) + 2
+    modY_mean_est <- param_est[1:dim_beta]
+    modY_mean_se <- param_se[1:dim_beta]
+    modY_mean_rse <- param_rob_se[1:dim_beta]
+    modY_mean <- data.frame(coeff = modY_mean_est,
+                            se = modY_mean_se,
+                            robse = modY_mean_rse)
+    rownames(modY_mean) <- c("(Intercept)", X, Z)
+
+    # Construct contents of "outcome_model" slot
+    modY <- list(distY = distY,
+                 mean = modY_mean,
+                 shape = modY_shape)
+  } else if (distY == "weibull") {
+    ## Shape parameter (estimated directly)
+    modY_shape_est <- param_est[1]
+    modY_shape_se <- param_se[1]
+    modY_shape_rse <- param_rob_se[1]
+    modY_shape <- data.frame(coeff = modY_shape_est,
+                             se = modY_shape_se,
+                             robse = modY_shape_rse)
+    rownames(modY_shape) <- c("(Intercept)")
+    param_est <- param_est[-1]
+    param_se <- param_se[-1]
+    param_rob_se <- param_rob_se[-1]
+
+    ## Scale parameter (linear function of Z)
+    dim_beta <- length(Z) + 2
+    modY_scale_est <- param_est[1:dim_beta]
+    modY_scale_se <- param_se[1:dim_beta]
+    modY_scale_rse <- param_rob_se[1:dim_beta]
+    modY_scale <- data.frame(coeff = modY_scale_est,
+                             se = modY_scale_se,
+                             robse = modY_scale_rse)
+    rownames(modY_scale) <- c("(Intercept)", X, Z)
+
+    # Construct contents of "outcome_model" slot
+    modY <- list(distY = distY,
+                 scale = modY_scale,
+                 shape = modY_shape)
+  } else if (distY %in% c("exponential", "poisson")) {
+    # Create coefficients dataframe for outcome model
+    ## Rate parameter (linear function of Z)
+    dim_beta <- length(Z) + 2
+    modY_rate_est <- param_est[1:dim_beta]
+    modY_rate_se <- param_se[1:dim_beta]
+    modY_rate_rse <- param_rob_se[1:dim_beta]
+    modY_rate <- data.frame(coeff = modY_rate_est,
+                            se = modY_rate_se,
+                            robse = modY_rate_rse)
+    rownames(modY_rate) <- c("(Intercept)", Z)
+
+    # Construct contents of "outcome_model" slot
+    modY <- list(distY = distY,
+                 rate = modY_rate)
   }
+  # Remove outcome model parameters/standard errors
+  param_est <- param_est[-c(1:(dim_beta + 1))]
+  param_se <- param_se[-c(1:(dim_beta + 1))]
+  param_rob_se <- param_rob_se[-c(1:(dim_beta + 1))]
 
   ####################################################
   # Predictor model P(X|Z) ###########################
@@ -264,7 +328,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
     param_rob_se <- param_rob_se[-1]
 
     ## Scale parameter (linear function of Z)
-    dim_eta <- (length(Z) + 1)
+    dim_eta <- length(Z) + 1
     modX_scale_est <- param_est[1:dim_eta]
     modX_scale_se <- param_se[1:dim_eta]
     modX_scale_rse <- param_rob_se[1:dim_eta]
