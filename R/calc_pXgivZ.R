@@ -131,10 +131,10 @@ calc_pXgivZ <- function(x, z = NULL, distX, eta_params) {
         pXgivZ <- dexp(x = x, rate = rateX)
       )
     } else {
-      # pXgivZ <- rateX ^ x * exp(- rateX) / factorial(x)
-      suppressWarnings(
-        pXgivZ <- dpois(x = x, lambda = rateX)
-      )
+      pXgivZ <- rateX ^ x * exp(- rateX) / factorial(x)
+      # suppressWarnings(
+      #   pXgivZ <- dpois(x = x, lambda = rateX)
+      # )
     }
     # -------------------------------------- Calculate
     # Check: rate of exponential/Poisson > 0 ---------
