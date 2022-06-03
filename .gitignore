@@ -47,3 +47,11 @@ glmCensRd.Rproj
 
 .Rproj.user/shared/notebooks/
 .Rproj.user
+
+*.log
+
+README_cache/latex/
+
+*.Rmd
+
+*.tex
