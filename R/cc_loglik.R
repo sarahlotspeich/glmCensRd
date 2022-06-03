@@ -32,6 +32,9 @@ cc_loglik <- function(params, Y, X, Z = NULL, data, distY = "normal", distX = "n
     ## And the log-likelihood needs to be arbitrarily "huge"
     return(1E8)
   } else {
+    # Replace pYXandZ = 0 with 1 so that log(pYXandZ) = 0
+    ## Otherwise log(pYXandZ) = -Inf
+    pYXandZ[pYXandZ == 0] <- 1
     ll <- sum(log(pYXandZ))
     # Return (-1) x log-likelihood for use with nlm() --
     return(- ll)
