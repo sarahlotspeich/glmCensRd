@@ -12,7 +12,7 @@ init_vals <- function(Z, distY, distX) {
   if (distX %in% c("normal", "log-normal")) {
     params0 <- c(params0, rep(0, 1 + length(Z)), 1)
   } else if (distX %in% c("gamma", "inverse-gaussian", "weibull")) {
-    params0 <- c(params0, 1E-4, rep(0, 1 + length(Z)))
+    params0 <- c(params0, rep(1E-4, 2 + length(Z)))
   } else if (distX %in% c("exponential", "poisson")) {
     params0 <- c(params0, 1E-4, rep(0, length(Z)))
   }
