@@ -45,13 +45,14 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
     print("Fit complete-case initial values:")
   }
   ## Use complete-case MLE
+  cc_data = data[data[, D] == 1, ]
   suppressWarnings(
     cc_mod <- nlm(f = cc_loglik,
                   p = params0_n,
                   Y = Y,
                   X = X,
                   Z = Z,
-                  data = data[data[, D] == 1, ],
+                  data = cc_data,
                   distY = distY,
                   distX = distX,
                   steptol = steptol,
@@ -59,7 +60,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                   hessian = FALSE
                   )
     )
-  if (cc_mod$code <= 2 & cc_mod$iterations > 0) {
+  if (cc_mod$code <= 2 & cc_mod$iterations > 1) {
     params0_cc <- cc_mod$estimate
   } else {
     params0_cc <- params0_n
@@ -87,32 +88,24 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                iterlim = iterlim,
                hessian = TRUE)
   )
-  param_est <- mod$estimate
-  param_vcov <- tryCatch(expr = solve(mod$hessian),
-                         error = function(c) matrix(data = NA,
-                                                    nrow = length(param_est),
-                                                    ncol = length(param_est))
-                         )
-  param_se <- sqrt(diag(param_vcov))
-
-  if (verbose) {
-    print(mod)
-  }
-
-  if (robcov) {
-    # Derivatives of the log-likelihood
-    first_deriv <- calc_deriv_loglik(params = param_est,
-                                     Y = Y,
-                                     X = X,
-                                     D = D,
-                                     W = W,
-                                     Z = Z,
-                                     subdivisions = subdivisions,
-                                     distY = distY,
-                                     distX = distX,
-                                     data = data)
-
-    second_deriv <- calc_deriv2_loglik(params = param_est,
+  
+  # Check that nlm() actually iterated 
+  if (mod$iterations > 1) {
+    param_est <- mod$estimate
+    param_vcov <- tryCatch(expr = solve(mod$hessian),
+                           error = function(c) matrix(data = NA,
+                                                      nrow = length(param_est),
+                                                      ncol = length(param_est))
+    )
+    param_se <- sqrt(diag(param_vcov))
+    
+    if (verbose) {
+      print(mod)
+    }
+    
+    if (robcov) {
+      # Derivatives of the log-likelihood
+      first_deriv <- calc_deriv_loglik(params = param_est,
                                        Y = Y,
                                        X = X,
                                        D = D,
@@ -122,35 +115,52 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                                        distY = distY,
                                        distX = distX,
                                        data = data)
-
-    # Sandwich covariance estimator
-    ## Sandwich meat
-    rep_each <- first_deriv[, rep(x = 1:ncol(first_deriv), each = length(param_est))]
-    rep_times <- first_deriv[, rep(x = 1:ncol(first_deriv), times = length(param_est))]
-    entriesB <- colMeans(x = rep_each * rep_times)
-    B <- matrix(data = entriesB,
-                nrow = length(param_est),
-                ncol = length(param_est),
-                byrow = TRUE)
-
-    ## Sandwich bread
-    entriesA <- colMeans(x = second_deriv)
-    A <- matrix(data = entriesA,
-                nrow = length(param_est),
-                ncol = length(param_est),
-                byrow = TRUE)
-
-    ## Sandwich covariance
-    n <- nrow(data)
-    param_rob_vcov <- solve(A) %*% B %*% t(solve(A))
-    param_rob_se <- sqrt(diag(param_rob_vcov)) / sqrt(n)
+      
+      second_deriv <- calc_deriv2_loglik(params = param_est,
+                                         Y = Y,
+                                         X = X,
+                                         D = D,
+                                         W = W,
+                                         Z = Z,
+                                         subdivisions = subdivisions,
+                                         distY = distY,
+                                         distX = distX,
+                                         data = data)
+      
+      # Sandwich covariance estimator
+      ## Sandwich meat
+      rep_each <- first_deriv[, rep(x = 1:ncol(first_deriv), each = length(param_est))]
+      rep_times <- first_deriv[, rep(x = 1:ncol(first_deriv), times = length(param_est))]
+      entriesB <- colMeans(x = rep_each * rep_times)
+      B <- matrix(data = entriesB,
+                  nrow = length(param_est),
+                  ncol = length(param_est),
+                  byrow = TRUE)
+      
+      ## Sandwich bread
+      entriesA <- colMeans(x = second_deriv)
+      A <- matrix(data = entriesA,
+                  nrow = length(param_est),
+                  ncol = length(param_est),
+                  byrow = TRUE)
+      
+      ## Sandwich covariance
+      n <- nrow(data)
+      param_rob_vcov <- solve(A) %*% B %*% t(solve(A))
+      param_rob_se <- sqrt(diag(param_rob_vcov)) / sqrt(n)
+    } else {
+      param_rob_vcov <- matrix(data = NA,
+                               nrow = length(param_est),
+                               ncol = length(param_est))
+      param_rob_se <- rep(NA, length(param_est))
+    }
   } else {
-    param_rob_vcov <- matrix(data = NA,
-                             nrow = length(param_est),
-                             ncol = length(param_est))
-    param_se <- rep(NA, length(param_est))
+    param_est <- param_se <- param_rob_se <- rep(NA, times = length(mod$estimate))
+    param_vcov <- param_rob_vcov <- matrix(data = NA,
+                                           nrow = length(param_est),
+                                           ncol = length(param_est))
   }
-
+  
   ####################################################
   # Analysis model P(Y|X,Z) ##########################
   ####################################################
