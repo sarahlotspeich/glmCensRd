@@ -88,8 +88,8 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                iterlim = iterlim,
                hessian = TRUE)
   )
-  
-  # Check that nlm() actually iterated 
+
+  # Check that nlm() actually iterated
   if (mod$iterations > 1) {
     param_est <- mod$estimate
     param_vcov <- tryCatch(expr = solve(mod$hessian),
@@ -98,11 +98,11 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                                                       ncol = length(param_est))
     )
     param_se <- sqrt(diag(param_vcov))
-    
+
     if (verbose) {
       print(mod)
     }
-    
+
     if (robcov) {
       # Derivatives of the log-likelihood
       first_deriv <- calc_deriv_loglik(params = param_est,
@@ -115,7 +115,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                                        distY = distY,
                                        distX = distX,
                                        data = data)
-      
+
       second_deriv <- calc_deriv2_loglik(params = param_est,
                                          Y = Y,
                                          X = X,
@@ -126,7 +126,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                                          distY = distY,
                                          distX = distX,
                                          data = data)
-      
+
       # Sandwich covariance estimator
       ## Sandwich meat
       rep_each <- first_deriv[, rep(x = 1:ncol(first_deriv), each = length(param_est))]
@@ -136,18 +136,18 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                   nrow = length(param_est),
                   ncol = length(param_est),
                   byrow = TRUE)
-      
+
       ## Sandwich bread
       entriesA <- colMeans(x = second_deriv)
       A <- matrix(data = entriesA,
                   nrow = length(param_est),
                   ncol = length(param_est),
                   byrow = TRUE)
-      
+
       ## Sandwich covariance
       n <- nrow(data)
-      param_rob_vcov <- solve(A) %*% B %*% t(solve(A))
-      param_rob_se <- sqrt(diag(param_rob_vcov)) / sqrt(n)
+      param_rob_vcov <- solve(A) %*% B %*% t(solve(A)) / n
+      param_rob_se <- sqrt(diag(param_rob_vcov))
     } else {
       param_rob_vcov <- matrix(data = NA,
                                nrow = length(param_est),
@@ -160,7 +160,7 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                                            nrow = length(param_est),
                                            ncol = length(param_est))
   }
-  
+
   ####################################################
   # Analysis model P(Y|X,Z) ##########################
   ####################################################
