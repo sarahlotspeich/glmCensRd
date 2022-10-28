@@ -51,6 +51,9 @@ loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY
     ## And the log-likelihood needs to be arbitrarily "huge"
     return(1E8)
   } else {
+    # Replace P(Y,X,Z) = 0 with P(Y,X,Z) = 1 so that
+    ## log P(Y,X,Z) = 0.
+    pYXandZ_uncens[pYXandZ_uncens == 0] = 1
     ll <- sum(log(pYXandZ_uncens))
   }
 
