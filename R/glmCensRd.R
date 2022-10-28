@@ -41,40 +41,40 @@ glmCensRd <- function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "norma
                          distX = distX)
 
   # Initial parameter values
-  if (verbose) {
-    print("Fit complete-case initial values:")
-  }
-  ## Use complete-case MLE
-  cc_data = data[data[, D] == 1, ]
-  suppressWarnings(
-    cc_mod <- nlm(f = cc_loglik,
-                  p = params0_n,
-                  Y = Y,
-                  X = X,
-                  Z = Z,
-                  data = cc_data,
-                  distY = distY,
-                  distX = distX,
-                  steptol = steptol,
-                  iterlim = iterlim,
-                  hessian = FALSE
-                  )
-    )
-  if (cc_mod$code <= 2 & cc_mod$iterations > 1) {
-    params0_cc <- cc_mod$estimate
-  } else {
-    params0_cc <- params0_n
-  }
-  if (verbose) {
-    print(cc_mod)
-  }
+  # if (verbose) {
+  #   print("Fit complete-case initial values:")
+  # }
+  # ## Use complete-case MLE
+  # cc_data = data[data[, D] == 1, ]
+  # suppressWarnings(
+  #   cc_mod <- nlm(f = cc_loglik,
+  #                 p = params0_n,
+  #                 Y = Y,
+  #                 X = X,
+  #                 Z = Z,
+  #                 data = cc_data,
+  #                 distY = distY,
+  #                 distX = distX,
+  #                 steptol = steptol,
+  #                 iterlim = iterlim,
+  #                 hessian = FALSE
+  #                 )
+  #   )
+  # if (cc_mod$code <= 2 & cc_mod$iterations > 1) {
+  #   params0_cc <- cc_mod$estimate
+  # } else {
+  #   params0_cc <- params0_n
+  # }
+  # if (verbose) {
+  #   print(cc_mod)
+  # }
 
   if (verbose) {
     print("Fit full MLE:")
   }
   suppressWarnings(
     mod <- nlm(f = loglik,
-               p = params0_cc,
+               p = params0_n,#params0_cc,
                Y = Y,
                X = X,
                D = D,
