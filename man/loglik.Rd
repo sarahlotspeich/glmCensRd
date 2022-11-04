@@ -14,7 +14,8 @@ loglik(
   data,
   subdivisions = 100,
   distY = "normal",
-  distX = "normal"
+  distX = "normal",
+  cens = "right"
 )
 }
 \arguments{
@@ -30,13 +31,15 @@ loglik(
 
 \item{Z}{(optional) name(s) of additional fully observed covariates. If none, \code{Z = NULL} (the default).}
 
-\item{data}{a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
+\item{data}{dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 
 \item{subdivisions}{(fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.}
 
 \item{distY}{distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.}
 
 \item{distX}{distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"inverse-gaussian"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
+
+\item{cens}{type of censoring assumed for \code{X}. Default is \code{"right"}, but the other option is \code{"left"}.}
 }
 \value{
 A scalar of the log-likelihood function (negated for use with \code{nlm}()).

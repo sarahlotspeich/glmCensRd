@@ -6,16 +6,17 @@
 #' @param W name of observed (censored) version of \code{X}.
 #' @param D name of event indicator, defined to be \code{= 1} if \code{X} was uncensored and \code{0} otherwise.
 #' @param Z (optional) name(s) of additional fully observed covariates. If none, \code{Z = NULL} (the default).
-#' @param data a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.
+#' @param data dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.
 #' @param subdivisions (fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.
 #' @param distY distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.
 #' @param distX distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"inverse-gaussian"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.
+#' @param cens type of censoring assumed for \code{X}. Default is \code{"right"}, but the other option is \code{"left"}.
 #'
 #' @export
 #'
 #' @return A scalar of the log-likelihood function (negated for use with \code{nlm}()).
 #'
-loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY = "normal", distX = "normal") {
+loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY = "normal", distX = "normal", cens = "right") {
   ####################################################
   # Pre-processing ###################################
   ####################################################
@@ -67,8 +68,8 @@ loglik <- function(params, Y, X, W, D, Z = NULL, data, subdivisions = 100, distY
       Zi <- data_row[Z]
       return(
         tryCatch(expr = integrate(f = calc_pYXandZ,
-                                  lower = Wi,
-                                  upper = Inf,
+                                  lower = ifelse(test = cens == "right", Wi, -Inf),
+                                  upper = ifelse(test = cens == "right", Inf, Wi),
                                   subdivisions = subdivisions,
                                   y = Yi,
                                   z = Zi,
