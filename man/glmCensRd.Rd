@@ -12,6 +12,7 @@ glmCensRd(
   data,
   distY = "normal",
   distX = "normal",
+  cens = "right",
   robcov = TRUE,
   subdivisions = 100,
   steptol = 1e-06,
@@ -28,11 +29,13 @@ glmCensRd(
 
 \item{Z}{(optional) name(s) of additional fully observed covariates. If none, \code{Z = NULL} (the default).}
 
-\item{data}{a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
+\item{data}{dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 
 \item{distY}{distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but other options are \code{"binomial"}, \code{"log-normal"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
 
 \item{distX}{distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
+
+\item{cens}{type of censoring assumed for \code{X}. Default is \code{"right"}, but the other option is \code{"left"}.}
 
 \item{robcov}{logical. If \code{TRUE} (the default), the robust sandwich covariance estimator of parameter standard errors is included in the output.}
 
