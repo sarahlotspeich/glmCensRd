@@ -1,4 +1,4 @@
-#' Observed-data log-likelihood
+#' Observed-data log-likelihood for GLMs with a censored covariate
 
 #' @param params parameter values.
 #' @param Y name of outcome variable.
@@ -68,8 +68,12 @@ loglik = function(params, Y, X, W, D, Z = NULL, data, distY = "normal", distX = 
       Zi = data_row[Z]
       return(
         tryCatch(expr = integrate(f = calc_pYXandZ,
-                                  lower = ifelse(test = cens == "right", Wi, -Inf),
-                                  upper = ifelse(test = cens == "right", Inf, Wi),
+                                  lower = ifelse(test = cens == "right", 
+                                                 yes = Wi, 
+                                                 no = -Inf),
+                                  upper = ifelse(test = cens == "right", 
+                                                 yes = Inf, 
+                                                 no = Wi),
                                   subdivisions = subdivisions,
                                   y = Yi,
                                   z = Zi,

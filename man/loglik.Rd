@@ -2,7 +2,7 @@
 % Please edit documentation in R/loglik.R
 \name{loglik}
 \alias{loglik}
-\title{Observed-data log-likelihood}
+\title{Observed-data log-likelihood for GLMs with a censored covariate}
 \usage{
 loglik(
   params,
@@ -12,10 +12,10 @@ loglik(
   D,
   Z = NULL,
   data,
-  subdivisions = 100,
   distY = "normal",
   distX = "normal",
-  cens = "right"
+  cens = "right",
+  subdivisions = 100
 )
 }
 \arguments{
@@ -33,17 +33,17 @@ loglik(
 
 \item{data}{dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 
-\item{subdivisions}{(fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.}
-
 \item{distY}{distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but \code{"binomial"} is the other option.}
 
 \item{distX}{distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"inverse-gaussian"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
 
 \item{cens}{type of censoring assumed for \code{X}. Default is \code{"right"}, but the other option is \code{"left"}.}
+
+\item{subdivisions}{(fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.}
 }
 \value{
 A scalar of the log-likelihood function (negated for use with \code{nlm}()).
 }
 \description{
-Observed-data log-likelihood
+Observed-data log-likelihood for GLMs with a censored covariate
 }
