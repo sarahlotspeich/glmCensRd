@@ -1,4 +1,4 @@
-#' Complete-case log-likelihood
+#' Complete-case log-likelihood for GLMs
 
 #' @param params parameter values.
 #' @param Y name of outcome variable.
@@ -12,17 +12,17 @@
 #'
 #' @return A scalar of the log-likelihood function (negated for use with \code{nlm}()).
 #'
-cc_loglik <- function(params, Y, X, Z = NULL, data, distY = "normal", distX = "normal") {
+loglik_cc = function(params, Y, X, Z = NULL, data, distY = "normal", distX = "normal") {
   ####################################################
   # Joint density P(Y,X,Z) ###########################
   ####################################################
-  pYXandZ <- calc_pYXandZ(x = data[, X],
-                          y = data[, Y],
-                          z = data[, Z],
-                          lengthZ = length(Z),
-                          distY = distY,
-                          distX = distX,
-                          params = params)
+  pYXandZ = calc_pYXandZ(x = data[, X],
+                         y = data[, Y],
+                         z = data[, Z],
+                         lengthZ = length(Z),
+                         distY = distY,
+                         distX = distX,
+                         params = params)
 
   ####################################################
   # Likelihood #######################################
@@ -34,8 +34,8 @@ cc_loglik <- function(params, Y, X, Z = NULL, data, distY = "normal", distX = "n
   } else {
     # Replace pYXandZ = 0 with 1 so that log(pYXandZ) = 0
     ## Otherwise log(pYXandZ) = -Inf
-    pYXandZ[pYXandZ == 0] <- 1
-    ll <- sum(log(pYXandZ))
+    pYXandZ[pYXandZ == 0] = 1
+    ll = sum(log(pYXandZ))
     # Return (-1) x log-likelihood for use with nlm() --
     return(- ll)
   }
