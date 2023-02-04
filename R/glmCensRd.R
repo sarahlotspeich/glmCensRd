@@ -103,7 +103,7 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                              nrow = numpar,
                              ncol = numpar)
     )
-    se = sqrt(diag(param_vcov))
+    se = sqrt(diag(vcov))
     
     ## Robust variance/standard error estimates
     if (robcov) {
@@ -158,10 +158,10 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
       rob_se = rep(NA, numpar)
     }
   } else {
-    param_est = param_se = param_rob_se = rep(NA, times = length(mod$estimate))
-    param_vcov = param_rob_vcov = matrix(data = NA,
-                                         nrow = p,
-                                         ncol = p)
+    est = se = rob_se = rep(NA, times = length(mod$estimate))
+    vcov = rob_vcov = matrix(data = NA,
+                             nrow = numpar,
+                             ncol = numpar)
   }
 
   ####################################################
@@ -170,6 +170,7 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
   summ = summarize_models(est = est, 
                           se = se, 
                           rob_se = rob_se, 
+                          X = X,
                           Z = Z, 
                           distY = distY, 
                           distX = distX)
