@@ -89,306 +89,97 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
               lower = theta_bounds$lower,
               upper = theta_bounds$upper,
               hessian = T)
-  
-  # suppressWarnings(
-  #   mod = nlm(f = loglik,
-  #             p = init_vals,
-  #             Y = Y,
-  #             X = X,
-  #             D = D,
-  #             W = W,
-  #             Z = Z,
-  #             subdivisions = subdivisions,
-  #             data = data,
-  #             distY = distY,
-  #             distX = distX,
-  #             cens = cens,
-  #             steptol = steptol,
-  #             iterlim = iterlim,
-  #             hessian = TRUE)
-  # )
 
-  # Check that nlm() actually iterated
-  if (mod$iterations > 1) {
-    param_est = mod$estimate
-    p = length(param_est)
-    param_vcov = tryCatch(expr = solve(mod$hessian),
-                          error = function(c) matrix(data = NA,
-                                                     nrow = p,
-                                                     ncol = p)
+  # Check that optim() converged 
+  if (mod$convergence == 0) {
+    ## Parameter estimates
+    est = mod$par
+    numpar = length(est)
+    
+    ## Variance/standard error estimates
+    vcov = tryCatch(expr = solve(mod$hessian),
+                    error = function(c) 
+                      matrix(data = NA,
+                             nrow = numpar,
+                             ncol = numpar)
     )
-    param_se = sqrt(diag(param_vcov))
-
+    se = sqrt(diag(param_vcov))
+    
+    ## Robust variance/standard error estimates
     if (robcov) {
       # Derivatives of the log-likelihood
-      first_deriv = calc_deriv_loglik(params = param_est,
-                                       Y = Y,
-                                       X = X,
-                                       D = D,
-                                       W = W,
-                                       Z = Z,
-                                       subdivisions = subdivisions,
-                                       distY = distY,
-                                       distX = distX,
-                                       data = data)
-
-      second_deriv = calc_deriv2_loglik(params = param_est,
-                                         Y = Y,
-                                         X = X,
-                                         D = D,
-                                         W = W,
-                                         Z = Z,
-                                         subdivisions = subdivisions,
-                                         distY = distY,
-                                         distX = distX,
-                                         data = data)
-
+      first_deriv = calc_deriv_loglik(params = est,
+                                      Y = Y,
+                                      X = X,
+                                      D = D,
+                                      W = W,
+                                      Z = Z,
+                                      subdivisions = subdivisions,
+                                      distY = distY,
+                                      distX = distX,
+                                      data = data)
+      
+      second_deriv = calc_deriv2_loglik(params = est,
+                                        Y = Y,
+                                        X = X,
+                                        D = D,
+                                        W = W,
+                                        Z = Z,
+                                        subdivisions = subdivisions,
+                                        distY = distY,
+                                        distX = distX,
+                                        data = data)
+      
       # Sandwich covariance estimator
       ## Sandwich meat
-      rep_each = first_deriv[, rep(x = 1:ncol(first_deriv), each = p)]
-      rep_times = first_deriv[, rep(x = 1:ncol(first_deriv), times = p)]
+      rep_each = first_deriv[, rep(x = 1:ncol(first_deriv), each = numpar)]
+      rep_times = first_deriv[, rep(x = 1:ncol(first_deriv), times = numpar)]
       entriesB = colMeans(x = rep_each * rep_times)
       B = matrix(data = entriesB,
-                  nrow = p,
-                  ncol = p,
-                  byrow = TRUE)
-
+                 nrow = numpar,
+                 ncol = numpar,
+                 byrow = TRUE)
+      
       ## Sandwich bread
       entriesA = colMeans(x = second_deriv)
       A = matrix(data = entriesA,
-                  nrow = p,
-                  ncol = p,
-                  byrow = TRUE)
-
-      ## Sandwich covariance
+                 nrow = numpar,
+                 ncol = numpar,
+                 byrow = TRUE)
+      
+      ## Build sandwich
       n = nrow(data)
-      param_rob_vcov = solve(A) %*% B %*% t(solve(A)) / n
-      param_rob_se = sqrt(diag(param_rob_vcov))
+      rob_vcov = solve(A) %*% B %*% t(solve(A)) / n
+      rob_se = sqrt(diag(rob_vcov))
     } else {
-      param_rob_vcov = matrix(data = NA,
-                               nrow = p,
-                               ncol = p)
-      param_rob_se = rep(NA, p)
+      rob_vcov = matrix(data = NA,
+                        nrow = numpar,
+                        ncol = numpar)
+      rob_se = rep(NA, numpar)
     }
   } else {
     param_est = param_se = param_rob_se = rep(NA, times = length(mod$estimate))
     param_vcov = param_rob_vcov = matrix(data = NA,
-                                           nrow = p,
-                                           ncol = p)
+                                         nrow = p,
+                                         ncol = p)
   }
 
   ####################################################
   # Analysis model P(Y|X,Z) ##########################
   ####################################################
-  if (distY == "normal") {
-    # Create coefficients dataframe for outcome model
-    ## Mean parameter (linear function of Z)
-    dim_beta = length(Z) + 2
-    modY_mean_est = param_est[1:dim_beta]
-    modY_mean_se = param_se[1:dim_beta]
-    modY_mean_rse = param_rob_se[1:dim_beta]
-    modY_mean = data.frame(coeff = modY_mean_est,
-                            se = modY_mean_se,
-                            robse = modY_mean_rse)
-    rownames(modY_mean) = c("(Intercept)", X, Z)
-
-    ## Error variance parameter (estimated directly)
-    modY_sigma2 = param_est[dim_beta + 1] ^ 2
-
-    # Construct contents of "outcome_model" slot
-    modY = list(distY = distY,
-                 mean = modY_mean,
-                 sigma2 = modY_sigma2)
-  } else if (distY == "binomial") {
-    # Create coefficients dataframe for outcome model
-    ## Mean parameter (linear function of Z)
-    dim_beta = length(Z) + 2
-    modY_mean_est = param_est[1:dim_beta]
-    modY_mean_se = param_se[1:dim_beta]
-    modY_mean_rse = param_rob_se[1:dim_beta]
-    modY_mean = data.frame(coeff = modY_mean_est,
-                            se = modY_mean_se,
-                            robse = modY_mean_rse)
-    rownames(modY_mean) = c("(Intercept)", X, Z)
-
-    # Construct contents of "covariate_model" slot
-    modY = list(distY = distY,
-                 mean = modY_mean)
-  } else if (distY %in% c("gamma", "inverse-gaussian")) {
-    # Create coefficients dataframe for covariate model
-    ## Shape parameter (estimated directly)
-    modY_shape_est = param_est[1]
-    modY_shape_se = param_se[1]
-    modY_shape_rse = param_rob_se[1]
-    modY_shape = data.frame(coeff = modY_shape_est,
-                             se = modY_shape_se,
-                             robse = modY_shape_rse)
-    rownames(modY_shape) = c("(Intercept)")
-    param_est = param_est[-1]
-    param_se = param_se[-1]
-    param_rob_se = param_rob_se[-1]
-
-    ## Mean parameter (linear function of Z)
-    dim_beta = length(Z) + 2
-    modY_mean_est = param_est[1:dim_beta]
-    modY_mean_se = param_se[1:dim_beta]
-    modY_mean_rse = param_rob_se[1:dim_beta]
-    modY_mean = data.frame(coeff = modY_mean_est,
-                            se = modY_mean_se,
-                            robse = modY_mean_rse)
-    rownames(modY_mean) = c("(Intercept)", X, Z)
-
-    # Construct contents of "outcome_model" slot
-    modY = list(distY = distY,
-                 mean = modY_mean,
-                 shape = modY_shape)
-  } else if (distY == "weibull") {
-    ## Shape parameter (estimated directly)
-    modY_shape_est = param_est[1]
-    modY_shape_se = param_se[1]
-    modY_shape_rse = param_rob_se[1]
-    modY_shape = data.frame(coeff = modY_shape_est,
-                             se = modY_shape_se,
-                             robse = modY_shape_rse)
-    rownames(modY_shape) = c("(Intercept)")
-    param_est = param_est[-1]
-    param_se = param_se[-1]
-    param_rob_se = param_rob_se[-1]
-
-    ## Scale parameter (linear function of Z)
-    dim_beta = length(Z) + 2
-    modY_scale_est = param_est[1:dim_beta]
-    modY_scale_se = param_se[1:dim_beta]
-    modY_scale_rse = param_rob_se[1:dim_beta]
-    modY_scale = data.frame(coeff = modY_scale_est,
-                             se = modY_scale_se,
-                             robse = modY_scale_rse)
-    rownames(modY_scale) = c("(Intercept)", X, Z)
-
-    # Construct contents of "outcome_model" slot
-    modY = list(distY = distY,
-                 scale = modY_scale,
-                 shape = modY_shape)
-  } else if (distY %in% c("exponential", "poisson")) {
-    # Create coefficients dataframe for outcome model
-    ## Rate parameter (linear function of Z)
-    dim_beta = length(Z) + 2
-    modY_rate_est = param_est[1:dim_beta]
-    modY_rate_se = param_se[1:dim_beta]
-    modY_rate_rse = param_rob_se[1:dim_beta]
-    modY_rate = data.frame(coeff = modY_rate_est,
-                            se = modY_rate_se,
-                            robse = modY_rate_rse)
-    rownames(modY_rate) = c("(Intercept)", X, Z)
-
-    # Construct contents of "outcome_model" slot
-    modY = list(distY = distY,
-                 rate = modY_rate)
-  }
-  # Remove outcome model parameters/standard errors
-  param_est = param_est[-c(1:(dim_beta + 1))]
-  param_se = param_se[-c(1:(dim_beta + 1))]
-  param_rob_se = param_rob_se[-c(1:(dim_beta + 1))]
-
-  ####################################################
-  # covariate model P(X|Z) ###########################
-  ####################################################
-  if (distX %in% c("normal", "log-normal")) {
-    # Create coefficients dataframe for covariate model
-    ## Mean parameter (linear function of Z)
-    dim_eta = length(Z) + 1
-    modX_mean_est = param_est[1:dim_eta]
-    modX_mean_se = param_se[1:dim_eta]
-    modX_mean_rse = param_rob_se[1:dim_eta]
-    modX_mean = data.frame(coeff = modX_mean_est,
-                            se = modX_mean_se,
-                            robse = modX_mean_rse)
-    rownames(modX_mean) = c("(Intercept)", Z)
-
-    ## Error variance parameter (estimated directly)
-    modX_sigma2 = param_est[dim_eta + 1] ^ 2
-
-    # Construct contents of "covariate_model" slot
-    modX = list(distX = distX,
-                 mean = modX_mean,
-                 sigma2 = modX_sigma2)
-  } else if (distX %in% c("gamma", "inverse-gaussian")) {
-    # Create coefficients dataframe for covariate model
-    ## Shape parameter (estimated directly)
-    modX_shape_est = param_est[1]
-    modX_shape_se = param_se[1]
-    modX_shape_rse = param_rob_se[1]
-    modX_shape = data.frame(coeff = modX_shape_est,
-                             se = modX_shape_se,
-                             robse = modX_shape_rse)
-    rownames(modX_shape) = c("(Intercept)")
-    param_est = param_est[-1]
-    param_se = param_se[-1]
-    param_rob_se = param_rob_se[-1]
-
-    ## Mean parameter (linear function of Z)
-    dim_eta = length(Z) + 1
-    modX_mean_est = param_est[1:dim_eta]
-    modX_mean_se = param_se[1:dim_eta]
-    modX_mean_rse = param_rob_se[1:dim_eta]
-    modX_mean = data.frame(coeff = modX_mean_est,
-                            se = modX_mean_se,
-                            robse = modX_mean_rse)
-    rownames(modX_mean) = c("(Intercept)", Z)
-
-    # Construct contents of "covariate_model" slot
-    modX = list(distX = distX,
-                 mean = modX_mean,
-                 shape = modX_shape)
-  } else if (distX == "weibull") {
-    ## Shape parameter (estimated directly)
-    modX_shape_est = param_est[1]
-    modX_shape_se = param_se[1]
-    modX_shape_rse = param_rob_se[1]
-    modX_shape = data.frame(coeff = modX_shape_est,
-                             se = modX_shape_se,
-                             robse = modX_shape_rse)
-    rownames(modX_shape) = c("(Intercept)")
-    param_est = param_est[-1]
-    param_se = param_se[-1]
-    param_rob_se = param_rob_se[-1]
-
-    ## Scale parameter (linear function of Z)
-    dim_eta = length(Z) + 1
-    modX_scale_est = param_est[1:dim_eta]
-    modX_scale_se = param_se[1:dim_eta]
-    modX_scale_rse = param_rob_se[1:dim_eta]
-    modX_scale = data.frame(coeff = modX_scale_est,
-                             se = modX_scale_se,
-                             robse = modX_scale_rse)
-    rownames(modX_scale) = c("(Intercept)", Z)
-
-    # Construct contents of "covariate_model" slot
-    modX = list(distX = distX,
-                 scale = modX_scale,
-                 shape = modX_shape)
-  } else if (distX %in% c("exponential", "poisson")) {
-    ## Rate parameter (linear function of Z)
-    dim_eta = length(Z) + 1
-    modX_rate_est = param_est[1:dim_eta]
-    modX_rate_se = param_se[1:dim_eta]
-    modX_rate_rse = param_rob_se[1:dim_eta]
-    modX_rate = data.frame(coeff = modX_rate_est,
-                            se = modX_rate_se,
-                            robse = modX_rate_rse)
-    rownames(modX_rate) = c("(Intercept)", Z)
-
-    # Construct contents of "covariate_model" slot
-    modX = list(distX = distX,
-                 rate = modX_rate)
-  }
+  summ = summarize_models(est = est, 
+                          se = se, 
+                          rob_se = rob_se, 
+                          Z = Z, 
+                          distY = distY, 
+                          distX = distX)
 
   # Return model results in a list
-  return(list(outcome_model = modY,
-              covariate_model = modX,
-              code = mod$code,
-              vcov = param_vcov,
-              rvcov = param_rob_vcov
+  return(list(outcome_model = summ$modY,
+              covariate_model = summ$modX,
+              code = mod$convergence,
+              vcov = vcov,
+              rvcov = rob_vcov
               )
          )
 }

@@ -12,21 +12,25 @@
 #'
 bounds = function(Z = NULL, distY = "normal", distX = "normal") {
   if (distY %in% c("normal", "log-normal")) {
-    lower = c(rep(-Inf, 2 + length(Z)), 0)
+    lower = c(rep(-Inf, 2 + length(Z)), 1E-4)
     upper = rep(Inf, 3 + length(Z))
   } else if (distY == "binomial") {
-    params0 = c(rep(0, 2 + length(Z)))
+    lower = rep(-Inf, 2 + length(Z))
+    upper = rep(Inf, 2 + length(Z))
   } else if (distY %in% c("gamma", "inverse-gaussian", "weibull")) {
-    params0 = rep(1E-4, 3 + length(Z))
+    lower = rep(1E-4, 3 + length(Z))
+    upper = rep(Inf, 3 + length(Z))
   } else if (distY %in% c("exponential", "poisson")) {
-    params0 = c(1E-4, rep(0, 1 + length(Z)))
+    lower = c(1E-4, rep(0, 1 + length(Z)))
+    upper = rep(Inf, 2 + length(Z))
   }
 
   if (distX %in% c("normal", "log-normal")) {
     lower = c(lower, c(rep(-Inf, 1 + length(Z)), 0))
     upper = c(upper, rep(Inf, 2 + length(Z)))
   } else if (distX %in% c("gamma", "inverse-gaussian", "weibull")) {
-    params0 = c(params0, rep(1E-4, 2 + length(Z)))
+    lower = c(lower, rep(1E-4, 2 + length(Z)))
+    upper = c(upper, rep(Inf, 2 + length(Z)))
   } else if (distX %in% c("exponential", "poisson")) {
     params0 = c(params0, 1E-4, rep(0, length(Z)))
   }
