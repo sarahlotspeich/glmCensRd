@@ -1,4 +1,4 @@
-#' Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)
+#' Maximum likelihood estimator (MLE) for generalized linear models (GLMs) with a censored covariate
 #'
 #' @param Y name of outcome variable.
 #' @param W name of observed (censored) version of \code{X}.
@@ -9,20 +9,22 @@
 #' @param distX distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.
 #' @param cens type of censoring assumed for \code{X}. Default is \code{"right"}, but the other option is \code{"left"}.
 #' @param robcov logical. If \code{TRUE} (the default), the robust sandwich covariance estimator of parameter standard errors is included in the output.
+#' @param init_vals (optional) initial values for \code{outcome_model} and \code{covariate_model}. Default is \code{NULL} and naive initial values will be used. 
 #' @param subdivisions (fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.
 #' @param steptol (fed to \code{nlm}) a positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.
 #' @param iterlim (fed to \code{nlm}) a positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.
 #'
 #' @return A list with the following elements:
 #' \item{outcome_model}{a list containing details of the fitted model for the outcome.}
-#' \item{predictor_model}{a list containing details of the fitted model for the predictor.}
+#' \item{covariate_model}{a list containing details of the fitted model for the predictor.}
 #' \item{code}{an integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 #' \item{vcov}{variance-covariance matrix of the model parameters.}
 #' \item{rvcov}{robust sandwich variance-covariance matrix of the model parameters.}
 #'
 #' @export
 #'
-glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal", cens = "right", robcov = TRUE, subdivisions = 100, steptol = 1E-6, iterlim = 100) {
+glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal", cens = "right", 
+                     robcov = TRUE, init_vals = NULL, subdivisions = 100, steptol = 1E-6, iterlim = 100) {
   # Subset data to relevant, user-specified columns
   data = data[, c(Y, W, D, Z)]
 
@@ -35,58 +37,85 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
   ## Define column X variable name
   X = "X"
 
-  # Naive initial params (for complete-case)
-  params0_n = init_vals(Z = Z,
-                         distY = distY,
-                         distX = distX)
-
   # Initial parameter values
-  # ## Use complete-case MLE
-  # cc_data = data[data[, D] == 1, ]
-  # suppressWarnings(
-  #   cc_mod = nlm(f = cc_loglik,
-  #                 p = params0_n,
-  #                 Y = Y,
-  #                 X = X,
-  #                 Z = Z,
-  #                 data = cc_data,
-  #                 distY = distY,
-  #                 distX = distX,
-  #                 steptol = steptol,
-  #                 iterlim = iterlim,
-  #                 hessian = FALSE
-  #                 )
-  #   )
-  # if (cc_mod$code <= 2 & cc_mod$iterations > 1) {
-  #   params0_cc = cc_mod$estimate
-  # } else {
-  #   params0_cc = params0_n
-  # }
+  # If not supplied by user, use defaults 
+  if (is.null(init_vals)) {
+    ## Naive initial parameters
+    params0_n = init_vals(Z = Z,
+                          distY = distY,
+                          distX = distX)
+    
+    ## Use complete-case MLE
+    cc_data = data[data[, D] == 1, ]
+    cc_mod = nlm(f = loglik_cc,
+                 p = params0_n,
+                 Y = Y,
+                 X = X,
+                 Z = Z,
+                 data = cc_data,
+                 distY = distY,
+                 distX = distX,
+                 steptol = steptol,
+                 iterlim = iterlim,
+                 hessian = FALSE
+    )
+    
+    ## Check for convergence 
+    if (cc_mod$code <= 2 & cc_mod$iterations > 1) {
+      init_vals = cc_mod$estimate ### If TRUE, return estimates
+    } else {
+      init_vals = params0_n ### If FALSE, return naive estimates instead
+    }
+  } 
   
-  suppressWarnings(
-    mod = nlm(f = loglik,
-               p = params0_n,#params0_cc,
-               Y = Y,
-               X = X,
-               D = D,
-               W = W,
-               Z = Z,
-               subdivisions = subdivisions,
-               data = data,
-               distY = distY,
-               distX = distX,
-               steptol = steptol,
-               iterlim = iterlim,
-               hessian = TRUE)
-  )
+  theta_bounds = bounds(Z = Z, 
+                        distY = distY, 
+                        distX = distX)
+  
+  mod = optim(par = init_vals, 
+              fn = loglik, #gr = gloglik,
+              Y = Y, 
+              X = X,
+              D = D, 
+              W = W, 
+              Z = Z, 
+              data = data,
+              distY = distY, 
+              distX = distX, 
+              cens = cens, 
+              subdivisions = subdivisions,
+              method = "L-BFGS-B",
+              control = list(maxit = iterlim),
+              lower = theta_bounds$lower,
+              upper = theta_bounds$upper,
+              hessian = T)
+  
+  # suppressWarnings(
+  #   mod = nlm(f = loglik,
+  #             p = init_vals,
+  #             Y = Y,
+  #             X = X,
+  #             D = D,
+  #             W = W,
+  #             Z = Z,
+  #             subdivisions = subdivisions,
+  #             data = data,
+  #             distY = distY,
+  #             distX = distX,
+  #             cens = cens,
+  #             steptol = steptol,
+  #             iterlim = iterlim,
+  #             hessian = TRUE)
+  # )
 
   # Check that nlm() actually iterated
   if (mod$iterations > 1) {
     param_est = mod$estimate
+    p = length(param_est)
     param_vcov = tryCatch(expr = solve(mod$hessian),
-                           error = function(c) matrix(data = NA,
-                                                      nrow = length(param_est),
-                                                      ncol = length(param_est))
+                          error = function(c) matrix(data = NA,
+                                                     nrow = p,
+                                                     ncol = p)
     )
     param_se = sqrt(diag(param_vcov))
 
@@ -116,19 +145,19 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
 
       # Sandwich covariance estimator
       ## Sandwich meat
-      rep_each = first_deriv[, rep(x = 1:ncol(first_deriv), each = length(param_est))]
-      rep_times = first_deriv[, rep(x = 1:ncol(first_deriv), times = length(param_est))]
+      rep_each = first_deriv[, rep(x = 1:ncol(first_deriv), each = p)]
+      rep_times = first_deriv[, rep(x = 1:ncol(first_deriv), times = p)]
       entriesB = colMeans(x = rep_each * rep_times)
       B = matrix(data = entriesB,
-                  nrow = length(param_est),
-                  ncol = length(param_est),
+                  nrow = p,
+                  ncol = p,
                   byrow = TRUE)
 
       ## Sandwich bread
       entriesA = colMeans(x = second_deriv)
       A = matrix(data = entriesA,
-                  nrow = length(param_est),
-                  ncol = length(param_est),
+                  nrow = p,
+                  ncol = p,
                   byrow = TRUE)
 
       ## Sandwich covariance
@@ -137,15 +166,15 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
       param_rob_se = sqrt(diag(param_rob_vcov))
     } else {
       param_rob_vcov = matrix(data = NA,
-                               nrow = length(param_est),
-                               ncol = length(param_est))
-      param_rob_se = rep(NA, length(param_est))
+                               nrow = p,
+                               ncol = p)
+      param_rob_se = rep(NA, p)
     }
   } else {
     param_est = param_se = param_rob_se = rep(NA, times = length(mod$estimate))
     param_vcov = param_rob_vcov = matrix(data = NA,
-                                           nrow = length(param_est),
-                                           ncol = length(param_est))
+                                           nrow = p,
+                                           ncol = p)
   }
 
   ####################################################
@@ -182,11 +211,11 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                             robse = modY_mean_rse)
     rownames(modY_mean) = c("(Intercept)", X, Z)
 
-    # Construct contents of "predictor_model" slot
+    # Construct contents of "covariate_model" slot
     modY = list(distY = distY,
                  mean = modY_mean)
   } else if (distY %in% c("gamma", "inverse-gaussian")) {
-    # Create coefficients dataframe for predictor model
+    # Create coefficients dataframe for covariate model
     ## Shape parameter (estimated directly)
     modY_shape_est = param_est[1]
     modY_shape_se = param_se[1]
@@ -262,10 +291,10 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
   param_rob_se = param_rob_se[-c(1:(dim_beta + 1))]
 
   ####################################################
-  # Predictor model P(X|Z) ###########################
+  # covariate model P(X|Z) ###########################
   ####################################################
   if (distX %in% c("normal", "log-normal")) {
-    # Create coefficients dataframe for predictor model
+    # Create coefficients dataframe for covariate model
     ## Mean parameter (linear function of Z)
     dim_eta = length(Z) + 1
     modX_mean_est = param_est[1:dim_eta]
@@ -279,12 +308,12 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
     ## Error variance parameter (estimated directly)
     modX_sigma2 = param_est[dim_eta + 1] ^ 2
 
-    # Construct contents of "predictor_model" slot
+    # Construct contents of "covariate_model" slot
     modX = list(distX = distX,
                  mean = modX_mean,
                  sigma2 = modX_sigma2)
   } else if (distX %in% c("gamma", "inverse-gaussian")) {
-    # Create coefficients dataframe for predictor model
+    # Create coefficients dataframe for covariate model
     ## Shape parameter (estimated directly)
     modX_shape_est = param_est[1]
     modX_shape_se = param_se[1]
@@ -307,7 +336,7 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                             robse = modX_mean_rse)
     rownames(modX_mean) = c("(Intercept)", Z)
 
-    # Construct contents of "predictor_model" slot
+    # Construct contents of "covariate_model" slot
     modX = list(distX = distX,
                  mean = modX_mean,
                  shape = modX_shape)
@@ -334,7 +363,7 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                              robse = modX_scale_rse)
     rownames(modX_scale) = c("(Intercept)", Z)
 
-    # Construct contents of "predictor_model" slot
+    # Construct contents of "covariate_model" slot
     modX = list(distX = distX,
                  scale = modX_scale,
                  shape = modX_shape)
@@ -349,14 +378,14 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                             robse = modX_rate_rse)
     rownames(modX_rate) = c("(Intercept)", Z)
 
-    # Construct contents of "predictor_model" slot
+    # Construct contents of "covariate_model" slot
     modX = list(distX = distX,
                  rate = modX_rate)
   }
 
   # Return model results in a list
   return(list(outcome_model = modY,
-              predictor_model = modX,
+              covariate_model = modX,
               code = mod$code,
               vcov = param_vcov,
               rvcov = param_rob_vcov

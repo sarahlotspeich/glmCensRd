@@ -2,7 +2,7 @@
 % Please edit documentation in R/glmCensRd.R
 \name{glmCensRd}
 \alias{glmCensRd}
-\title{Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)}
+\title{Maximum likelihood estimator (MLE) for generalized linear models (GLMs) with a censored covariate}
 \usage{
 glmCensRd(
   Y,
@@ -14,10 +14,10 @@ glmCensRd(
   distX = "normal",
   cens = "right",
   robcov = TRUE,
+  init_vals = NULL,
   subdivisions = 100,
   steptol = 1e-06,
-  iterlim = 100,
-  verbose = FALSE
+  iterlim = 100
 )
 }
 \arguments{
@@ -39,22 +39,22 @@ glmCensRd(
 
 \item{robcov}{logical. If \code{TRUE} (the default), the robust sandwich covariance estimator of parameter standard errors is included in the output.}
 
+\item{init_vals}{(optional) initial values for \code{outcome_model} and \code{covariate_model}. Default is \code{NULL} and naive initial values will be used.}
+
 \item{subdivisions}{(fed to \code{integrate}) the maximum number of subintervals used to integrate over unobserved \code{X} for censored subjects. Default is \code{100}.}
 
 \item{steptol}{(fed to \code{nlm}) a positive scalar providing the minimum allowable relative step length. Default is \code{1E-6}.}
 
 \item{iterlim}{(fed to \code{nlm}) a positive integer specifying the maximum number of iterations to be performed before the program is terminated. Default is \code{100}.}
-
-\item{verbose}{logical. If \code{TRUE}, text is printed to show progress. Default is \code{FALSE}.}
 }
 \value{
 A list with the following elements:
 \item{outcome_model}{a list containing details of the fitted model for the outcome.}
-\item{predictor_model}{a list containing details of the fitted model for the predictor.}
+\item{covariate_model}{a list containing details of the fitted model for the predictor.}
 \item{code}{an integer indicating why the optimization process terminated. See \code{?nlm} for details on values.}
 \item{vcov}{variance-covariance matrix of the model parameters.}
 \item{rvcov}{robust sandwich variance-covariance matrix of the model parameters.}
 }
 \description{
-Maximum likelihood estimator (MLE) for censored predictor in generalized linear models (GLM)
+Maximum likelihood estimator (MLE) for generalized linear models (GLMs) with a censored covariate
 }
