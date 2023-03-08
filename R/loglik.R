@@ -57,10 +57,11 @@ loglik = function(params, dataObj, returnSum = TRUE, subdivisions){ #params, Y, 
                              FUN = integrate_pYXgivZ)
     log_int_pYXgivZ_cens = log(int_pYXgivZ_cens)
     log_int_pYXgivZ_cens[log_int_pYXgivZ_cens == -Inf] = 0
-    ll = ll + sum(log_int_pYXgivZ_cens)
-  }
 
-  # Return (-1) x log-likelihood for use with nlm() --
-  return(- ll)
-  # -- Return (-1) x log-likelihood for use with nlm()
+    if (returnSum) {
+      ll = ll + sum(log_int_pYXgivZ_cens)
+      # Return (-1) x log-likelihood for use with nlm() --
+      return(- ll)
+    }
+  }
 }
