@@ -58,7 +58,7 @@ loglik = function(params, dataObj, returnSum = TRUE, subdivisions){ #params, Y, 
     log_int_pYXgivZ_cens[log_int_pYXgivZ_cens == -Inf] = 0
     if (returnSum) {
       # Add contributions of censored observations
-      ll = ll + sum(log_int_pYXgivZ_cens)
+      ll = sum(ll) + sum(log_int_pYXgivZ_cens)
     } else {
       # Append contributions of censored observations
       ll = c(ll, log_int_pYXgivZ_cens)
