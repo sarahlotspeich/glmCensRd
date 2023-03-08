@@ -10,15 +10,13 @@ cc_loglik = function(params, dataObj) {
   loglikObj$beta_params = get_beta_params(loglikObj)
   loglikObj$eta_params = params[-c(1:length(loglikObj$beta_params))]
 
-  print(loglikObj)
-
   ####################################################
   # Joint density P(Y,X,Z) ###########################
   ####################################################
   pYXgivZ = calc_pYXgivZ(object = loglikObj,
-                         y = loglikObj$data[, loglikObj$Y],
-                         x = loglikObj$data[, loglikObj$W],
-                         z = loglikObj$data[, loglikObj$Z])
+                         y = with(loglikObj, data[, Y]),
+                         x = with(loglikObj, data[, W]),
+                         z = with(loglikObj, data[, Z]))
 
   ####################################################
   # Likelihood #######################################
