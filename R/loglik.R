@@ -24,7 +24,6 @@ loglik = function(params, dataObj, subdivisions){ #params, Y, X, W, D, Z = NULL,
   ####################################################
   ll = - cc_loglik(params = params,
                    dataObj = uncens_dataObj)
-  print(ll)
 
   ####################################################
   # Log-likelihood of censored observations ##########
@@ -55,9 +54,7 @@ loglik = function(params, dataObj, subdivisions){ #params, Y, X, W, D, Z = NULL,
                              FUN = integrate_pYXgivZ)
     log_int_pYXgivZ_cens = log(int_pYXgivZ_cens)
     log_int_pYXgivZ_cens[log_int_pYXgivZ_cens == -Inf] = 0
-    print(summary(log_int_pYXgivZ_cens))
     ll = ll + sum(log_int_pYXgivZ_cens)
-    print(ll)
   #}
 
   # Return (-1) x log-likelihood for use with nlm() --
