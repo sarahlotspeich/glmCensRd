@@ -1,3 +1,4 @@
+#' @export
 loglik = function(params, dataObj, subdivisions){ #params, Y, X, W, D, Z = NULL, data, distY = "normal", distX = "normal", cens = "right", subdivisions = 100) {
   ####################################################
   # Pre-processing ###################################

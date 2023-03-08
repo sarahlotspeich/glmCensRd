@@ -1,3 +1,4 @@
+#' @export
 cc_loglik = function(params, dataObj) {
   ####################################################
   # Create log-likelihood object #####################
