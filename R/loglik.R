@@ -1,5 +1,5 @@
 #' @export
-loglik = function(params, dataObj, subdivisions){ #params, Y, X, W, D, Z = NULL, data, distY = "normal", distX = "normal", cens = "right", subdivisions = 100) {
+loglik = function(params, dataObj, returnSum = TRUE, subdivisions){ #params, Y, X, W, D, Z = NULL, data, distY = "normal", distX = "normal", cens = "right", subdivisions = 100) {
   ####################################################
   # Pre-processing ###################################
   ####################################################
@@ -22,8 +22,17 @@ loglik = function(params, dataObj, subdivisions){ #params, Y, X, W, D, Z = NULL,
   ####################################################
   # Log-likelihood of uncensored observations ########
   ####################################################
-  ll = - cc_loglik(params = params,
-                   dataObj = uncens_dataObj)
+  ll = cc_loglik(params = params, dataObj = uncens_dataObj)
+  ll = ifelse(test = returnSum, yes = -1, no = 1) * ll # if returnSum, negate ll
+  # if (returnSum) {
+  #   ll = - cc_loglik(params = params,
+  #                    dataObj = uncens_dataObj)
+  # } else {
+  #   ll = cc_loglik(params = params,
+  #                  dataObj = uncens_dataObj,
+  #                  returnSum = returnSum)
+  # }
+  #
 
   ####################################################
   # Log-likelihood of censored observations ##########
