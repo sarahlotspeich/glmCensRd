@@ -96,6 +96,7 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
     mod <- nlm(f = loglik,
                p = params0,
                dataObj = dataObj,
+               subdivisions = subdivisions,
                steptol = steptol,
                iterlim = iterlim,
                hessian = TRUE)
