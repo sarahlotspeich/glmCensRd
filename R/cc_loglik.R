@@ -38,8 +38,10 @@ cc_loglik = function(params, dataObj, returnSum = TRUE) {
       # Return (-1) x log-likelihood for use with nlm() --
       return(- ll)
     } else {
-      # Return individual log-likelihood contributions
       ll = log(pYXgivZ)
+
+      # Return individual log-likelihood contributions
+      return(ll)
     }
   }
 }
