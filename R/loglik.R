@@ -1,5 +1,5 @@
 #' @export
-loglik = function(params, dataObj, subdivisions){ #params, Y, X, W, D, Z = NULL, data, distY = "normal", distX = "normal", cens = "right", subdivisions = 100) {
+loglik = function(params, dataObj, returnSum = TRUE, subdivisions){ #params, Y, X, W, D, Z = NULL, data, distY = "normal", distX = "normal", cens = "right", subdivisions = 100) {
   ####################################################
   # Pre-processing ###################################
   ####################################################
@@ -14,16 +14,19 @@ loglik = function(params, dataObj, subdivisions){ #params, Y, X, W, D, Z = NULL,
 
   ## Create log-likelihood objects for censored...
   cens_dataObj = loglikObj
-  cens_dataObj$data = with(cens_dataObj, data[data[, D] == 0, ])
+  cens_dataObj$data = with(cens_dataObj,
+                           data[data[, D] == 0, ])
   ### and uncensored observations
   uncens_dataObj = loglikObj
-  uncens_dataObj$data = with(uncens_dataObj, data[data[, D] == 1, ])
+  uncens_dataObj$data = with(uncens_dataObj,
+                             data[data[, D] == 1, ])
 
   ####################################################
   # Log-likelihood of uncensored observations ########
   ####################################################
-  ll = - cc_loglik(params = params,
-                   dataObj = uncens_dataObj)
+  ll = cc_loglik(params = params,
+                 dataObj = uncens_dataObj,
+                 returnSum = returnSum)
 
   ####################################################
   # Log-likelihood of censored observations ##########
@@ -54,10 +57,15 @@ loglik = function(params, dataObj, subdivisions){ #params, Y, X, W, D, Z = NULL,
                              FUN = integrate_pYXgivZ)
     log_int_pYXgivZ_cens = log(int_pYXgivZ_cens)
     log_int_pYXgivZ_cens[log_int_pYXgivZ_cens == -Inf] = 0
-    ll = ll + sum(log_int_pYXgivZ_cens)
+    if (returnSum) {
+      # Add contributions of censored observations
+      ll = ll + sum(log_int_pYXgivZ_cens)
+      # Return (-1) x log-likelihood for use with nlm() --
+      return(- ll)
+    } else {
+      # Append contributions of censored observations
+      ll = c(ll, log_int_pYXgivZ_cens)
+      return(ll)
+    }
   #}
-
-  # Return (-1) x log-likelihood for use with nlm() --
-  return(- ll)
-  # -- Return (-1) x log-likelihood for use with nlm()
 }
