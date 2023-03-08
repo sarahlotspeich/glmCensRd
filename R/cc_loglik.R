@@ -13,10 +13,10 @@ cc_loglik = function(params, dataObj) {
   ####################################################
   # Joint density P(Y,X,Z) ###########################
   ####################################################
-  pYXgivZ = calc_pYXgivZ(object = loglikObj,
+  pYXgivZ = calc_pYXgivZ(x = with(loglikObj, data[, W]),
                          y = with(loglikObj, data[, Y]),
-                         x = with(loglikObj, data[, W]),
-                         z = with(loglikObj, data[, Z]))
+                         z = with(loglikObj, data[, Z]),
+                         object = loglikObj)
 
   ####################################################
   # Likelihood #######################################
