@@ -115,10 +115,6 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
     )
     param_se = sqrt(diag(param_vcov))
 
-    if (verbose) {
-      print(mod)
-    }
-
     if (robcov) {
       # Derivatives of the log-likelihood
       first_deriv = calc_deriv_loglik(params = param_est,
