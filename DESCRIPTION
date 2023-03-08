@@ -1,0 +1,12 @@
+Package: glmCensRd
+Type: Package
+Title: A generalized algorithm to fit GLMs with censored covariates in R
+Version: 0.1.0
+Author: Sarah C. Lotspeich
+Maintainer: Sarah C. Lotspeich <lotspes@wfu.edu>
+Description: Obtain estimates for regression models with censored covariates using
+    parametric maximum likelihood estimation.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.1
