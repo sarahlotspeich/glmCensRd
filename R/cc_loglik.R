@@ -1,5 +1,5 @@
 #' @export
-cc_loglik = function(params, dataObj) {
+cc_loglik = function(params, dataObj, returnSum = TRUE) {
   ####################################################
   # Create log-likelihood object #####################
   ####################################################
@@ -30,9 +30,16 @@ cc_loglik = function(params, dataObj) {
     # Replace pYXandZ = 0 with 1 so that log(pYXandZ) = 0
     ## Otherwise log(pYXandZ) = -Inf
     pYXgivZ[pYXgivZ == 0] = 1
-    ll = sum(log(pYXgivZ))
 
-    # Return (-1) x log-likelihood for use with nlm() --
-    return(- ll)
+    if (returnSum) {
+      # Sum over all observations
+      ll = sum(log(pYXgivZ))
+
+      # Return (-1) x log-likelihood for use with nlm() --
+      return(- ll)
+    } else {
+      # Return individual log-likelihood contributions
+      ll = log(pYXgivZ)
+    }
   }
 }
