@@ -100,6 +100,9 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                iterlim = iterlim,
                hessian = TRUE)
   )
+  if (verbose) {
+    print(mod$estimate)
+  }
 
   # Check that nlm() actually iterated
   if (mod$iterations > 1) {
