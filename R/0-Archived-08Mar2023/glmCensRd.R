@@ -68,45 +68,23 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
     }
   } 
   
-  theta_bounds = bounds(Z = Z, 
-                        distY = distY, 
-                        distX = distX)
-  
-  mod = optim(par = init_vals, 
-              fn = loglik, #gr = gloglik,
-              Y = Y, 
-              X = X,
-              D = D, 
-              W = W, 
-              Z = Z, 
-              data = data,
-              distY = distY, 
-              distX = distX, 
-              cens = cens, 
-              subdivisions = subdivisions,
-              method = "L-BFGS-B",
-              control = list(maxit = iterlim),
-              lower = theta_bounds$lower,
-              upper = theta_bounds$upper,
-              hessian = T)
-  
-  # suppressWarnings(
-  #   mod = nlm(f = loglik,
-  #             p = init_vals,
-  #             Y = Y,
-  #             X = X,
-  #             D = D,
-  #             W = W,
-  #             Z = Z,
-  #             subdivisions = subdivisions,
-  #             data = data,
-  #             distY = distY,
-  #             distX = distX,
-  #             cens = cens,
-  #             steptol = steptol,
-  #             iterlim = iterlim,
-  #             hessian = TRUE)
-  # )
+  suppressWarnings(
+    mod <- nlm(f = loglik,
+               p = init_vals,
+               Y = Y,
+               X = X,
+               D = D,
+               W = W,
+               Z = Z,
+               subdivisions = subdivisions,
+               data = data,
+               distY = distY,
+               distX = distX,
+               cens = cens,
+               steptol = steptol,
+               iterlim = iterlim,
+               hessian = TRUE)
+  )
 
   # Check that nlm() actually iterated
   if (mod$iterations > 1) {
