@@ -2,3 +2,9 @@
 glmCensRd.Rproj
 
 .DS_Store
+
+*.pper
+
+.Rproj.user/161B3924/
+
+.Rhistory
