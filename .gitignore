@@ -8,3 +8,7 @@ glmCensRd.Rproj
 .Rproj.user/161B3924/
 
 .Rhistory
+
+.Rbuildignore
+
+.Rproj.user/shared/notebooks/

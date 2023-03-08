@@ -24,8 +24,8 @@
 #' @export
 #'
 glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal",
-                      rightCens = TRUE, robcov = TRUE, subdivisions = 100, steptol = 1E-6,
-                      iterlim = 100, verbose = FALSE) {
+                     rightCens = TRUE, robcov = TRUE, subdivisions = 100, steptol = 1E-6,
+                     iterlim = 100, verbose = FALSE) {
   # Subset data to relevant, user-specified columns
   data = data[, c(Y, W, D, Z)]
 
@@ -93,17 +93,9 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
     print("Fit full MLE:")
   }
   suppressWarnings(
-    mod = nlm(f = loglik,
-               p = params0_cc,
-               Y = Y,
-               X = X,
-               D = D,
-               W = W,
-               Z = Z,
-               subdivisions = subdivisions,
-               data = data,
-               distY = distY,
-               distX = distX,
+    mod <- nlm(f = loglik,
+               p = params0,
+               dataObj = dataObj,
                steptol = steptol,
                iterlim = iterlim,
                hessian = TRUE)
