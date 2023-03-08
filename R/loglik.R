@@ -62,6 +62,9 @@ loglik = function(params, dataObj, returnSum = TRUE, subdivisions){ #params, Y, 
       ll = ll + sum(log_int_pYXgivZ_cens)
       # Return (-1) x log-likelihood for use with nlm() --
       return(- ll)
+    } else {
+      ll = c(ll, log_int_pYXgivZ_cens)
+      return(ll)
     }
   }
 }
