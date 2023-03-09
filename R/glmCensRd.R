@@ -125,27 +125,31 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
       conv_dataObj$eta_params = params[-c(1:length(conv_dataObj$beta_params))]
 
       # Derivatives of the log-likelihood
-      first_deriv = calc_deriv_loglik(params = param_est,
-                                       Y = Y,
-                                       X = X,
-                                       D = D,
-                                       W = W,
-                                       Z = Z,
-                                       subdivisions = subdivisions,
-                                       distY = distY,
-                                       distX = distX,
-                                       data = data)
+      first_deriv = calc_deriv_loglik(dataObj = conv_dataObj,
+                                      subdivisions = subdivisions)
+        # calc_deriv_loglik(params = param_est,
+        #                                  Y = Y,
+        #                                  X = X,
+        #                                  D = D,
+        #                                  W = W,
+        #                                  Z = Z,
+        #                                  subdivisions = subdivisions,
+        #                                  distY = distY,
+        #                                  distX = distX,
+        #                                  data = data)
 
-      second_deriv = calc_deriv2_loglik(params = param_est,
-                                         Y = Y,
-                                         X = X,
-                                         D = D,
-                                         W = W,
-                                         Z = Z,
-                                         subdivisions = subdivisions,
-                                         distY = distY,
-                                         distX = distX,
-                                         data = data)
+      second_deriv = calc_deriv2_loglik(dataObj = conv_dataObj,
+                                        subdivisions = subdivisions)
+        # calc_deriv2_loglik(params = param_est,
+        #                                  Y = Y,
+        #                                  X = X,
+        #                                  D = D,
+        #                                  W = W,
+        #                                  Z = Z,
+        #                                  subdivisions = subdivisions,
+        #                                  distY = distY,
+        #                                  distX = distX,
+        #                                  data = data)
 
       # Sandwich covariance estimator
       ## Sandwich meat
@@ -153,9 +157,9 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
       rep_times = first_deriv[, rep(x = 1:ncol(first_deriv), times = length(param_est))]
       entriesB = colMeans(x = rep_each * rep_times)
       B = matrix(data = entriesB,
-                  nrow = length(param_est),
-                  ncol = length(param_est),
-                  byrow = TRUE)
+                 nrow = length(param_est),
+                 ncol = length(param_est),
+                 byrow = TRUE)
 
       ## Sandwich bread
       entriesA = colMeans(x = second_deriv)
