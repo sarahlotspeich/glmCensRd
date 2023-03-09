@@ -1,5 +1,5 @@
 #' @export
-loglik = function(params, dataObj, returnSum = TRUE, subdivisions){ #params, Y, X, W, D, Z = NULL, data, distY = "normal", distX = "normal", cens = "right", subdivisions = 100) {
+loglik = function(params, dataObj, returnSum = TRUE, subdivisions){
   ####################################################
   # Pre-processing ###################################
   ####################################################
