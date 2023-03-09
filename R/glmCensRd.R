@@ -109,13 +109,21 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
   if (mod$iterations > 1) {
     param_est = mod$estimate
     param_vcov = tryCatch(expr = solve(mod$hessian),
-                           error = function(c) matrix(data = NA,
-                                                      nrow = length(param_est),
-                                                      ncol = length(param_est))
+                          error = function(c) matrix(data = NA,
+                                                     nrow = length(param_est),
+                                                     ncol = length(param_est))
     )
     param_se = sqrt(diag(param_vcov))
 
     if (robcov) {
+      ## Augment dataObj with parameters at convergence
+      conv_dataObj = dataObj
+      conv_dataObj$params = param_est
+
+      ## Add separate beta and eta parameters
+      conv_dataObj$beta_params = get_beta_params(conv_dataObj)
+      conv_dataObj$eta_params = params[-c(1:length(conv_dataObj$beta_params))]
+
       # Derivatives of the log-likelihood
       first_deriv = calc_deriv_loglik(params = param_est,
                                        Y = Y,
@@ -162,15 +170,17 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
       param_rob_se = sqrt(diag(param_rob_vcov)) / sqrt(n)
     } else {
       param_rob_vcov = matrix(data = NA,
-                               nrow = length(param_est),
-                               ncol = length(param_est))
-      param_rob_se = rep(NA, length(param_est))
+                              nrow = length(param_est),
+                              ncol = length(param_est))
+      param_rob_se = rep(NA,
+                         length(param_est))
     }
   } else {
-    param_est = param_se = param_rob_se = rep(NA, times = length(mod$estimate))
+    param_est = param_se = param_rob_se = rep(NA,
+                                              times = length(mod$estimate))
     param_vcov = param_rob_vcov = matrix(data = NA,
-                                           nrow = length(param_est),
-                                           ncol = length(param_est))
+                                         nrow = length(param_est),
+                                         ncol = length(param_est))
   }
 
   ####################################################
