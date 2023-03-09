@@ -17,8 +17,8 @@ calc_deriv_loglik = function(params = NULL, dataObj, subdivisions) {
   for (j in 1:p) {
     # Create jth euclidean vector
     ej = matrix(data = 0,
-                 nrow = p,
-                 ncol = 1)
+                nrow = p,
+                ncol = 1)
     ej[j] = 1
 
     # Perturb 1: params0 = params - eps
@@ -29,6 +29,7 @@ calc_deriv_loglik = function(params = NULL, dataObj, subdivisions) {
                 dataObj = dataObj,
                 returnSum = FALSE,
                 subdivisions = subdivisions)
+
     # l0 = calc_indiv_loglik(params = params0,
     #                        Y = Y,
     #                        X = X,
@@ -48,6 +49,7 @@ calc_deriv_loglik = function(params = NULL, dataObj, subdivisions) {
                 dataObj = dataObj,
                 returnSum = FALSE,
                 subdivisions = subdivisions)
+
     # l1 = calc_indiv_loglik(params = params1,
     #                        Y = Y,
     #                        X = X,
