@@ -1,6 +1,10 @@
-calc_deriv_loglik = function(dataObj, subdivisions) {
+calc_deriv_loglik = function(params = NULL, dataObj, subdivisions) {
+  # If no params supplied, take them from dataObj
+  if (is.null(params)) {
+    params = dataObj$params
+  }
+
   # Save constants
-  params = dataObj$params
   p = length(params)
   eps = params * (10 ^ (- 4))
 
