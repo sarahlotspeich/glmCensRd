@@ -23,7 +23,8 @@ loglik = function(params, dataObj, returnSum = TRUE, subdivisions){
   # Log-likelihood of uncensored observations ########
   ####################################################
   ll = cc_loglik(params = params,
-                 dataObj = uncens_dataObj)
+                 dataObj = uncens_dataObj,
+                 returnSum = returnSum)
   ll = ll * ifelse(test = returnSum,
                    yes = -1,
                    no = 1) # if returnSum, negate ll
