@@ -1,13 +1,12 @@
-calc_deriv_loglik = function(object, subdivisions) {
+calc_deriv_loglik = function(dataObj, subdivisions) {
   # Save constants
   p = length(params)
   eps = params * (10 ^ (- 4))
 
   # Create matrix to save derivatives in
   d_theta = matrix(data = 0,
-                   nrow = nrow(object$data),
-                   ncol = p,
-                   byrow = FALSE)
+                   nrow = nrow(dataObj$data),
+                   ncol = p)
 
   # Calculate derivative with respect to each parameter
   for (j in 1:p) {
@@ -22,7 +21,7 @@ calc_deriv_loglik = function(object, subdivisions) {
                      nrow = p,
                      ncol = 1)
     l0 = loglik(params = params0,
-                dataObj = object,
+                dataObj = dataObj,
                 returnSum = FALSE,
                 subdivisions = subdivisions)
     # l0 = calc_indiv_loglik(params = params0,
@@ -41,7 +40,7 @@ calc_deriv_loglik = function(object, subdivisions) {
                      nrow = p,
                      ncol = 1)
     l1 = loglik(params = params1,
-                dataObj = object,
+                dataObj = dataObj,
                 returnSum = FALSE,
                 subdivisions = subdivisions)
     # l1 = calc_indiv_loglik(params = params1,
