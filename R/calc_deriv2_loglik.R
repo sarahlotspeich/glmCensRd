@@ -25,7 +25,7 @@ calc_deriv2_loglik = function(params = NULL, dataObj, subdivisions) {
                      nrow = p,
                      ncol = 1)
     d_l0 = calc_deriv_loglik(params = params0,
-                             dataObj = conv_dataObj,
+                             dataObj = dataObj,
                              subdivisions = subdivisions)
       #calc_deriv_loglik(params = params0, Y = Y, X = X, W = W, D = D, Z = Z, subdivisions = subdivisions, distY = distY, distX = distX, data = data)
 
@@ -34,7 +34,7 @@ calc_deriv2_loglik = function(params = NULL, dataObj, subdivisions) {
                      nrow = p,
                      ncol = 1)
     d_l1 = calc_deriv_loglik(params = params1,
-                             dataObj = conv_dataObj,
+                             dataObj = dataObj,
                              subdivisions = subdivisions)
       #calc_deriv_loglik(params = params1, Y = Y, X = X, W = W, D = D, Z = Z, subdivisions = subdivisions, distY = distY, distX = distX, data = data)
 
