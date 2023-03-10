@@ -17,9 +17,10 @@ get_modX.normalX = function(object) {
   ## Error variance parameter (estimated directly)
   sigma2 = object$params[length(object$params)] ^ 2
 
-  # Construct contents of "outcome_model" slot
+  # Construct contents of "covariate_model" slot
   modX = list(mean = mean,
               sigma2 = sigma2)
+  class(modX) = class(object)[2]
   modX
 }
 
@@ -37,9 +38,10 @@ get_modX.lognormalX = function(object) {
   ## Error variance parameter (estimated directly)
   sigma2 = object$params[length(object$params)] ^ 2
 
-  # Construct contents of "outcome_model" slot
+  # Construct contents of "covariate_model" slot
   modX = list(mean = mean,
               sigma2 = sigma2)
+  class(modX) = class(object)[2]
   modX
 }
 
@@ -68,9 +70,10 @@ get_modX.gammaX = function(object) {
                     robse = mean_rse)
   rownames(mean) = c("(Intercept)", object$Z)
 
-  # Construct contents of "outcome_model" slot
+  # Construct contents of "covariate_model" slot
   modX = list(mean = mean,
               shape = shape)
+  class(modX) = class(object)[2]
   modX
 }
 
@@ -97,9 +100,10 @@ get_modX.weibullX = function(object) {
                           robse = scale_rse)
   rownames(scale) = c("(Intercept)", object$Z)
 
-  # Construct contents of "outcome_model" slot
+  # Construct contents of "covariate_model" slot
   modX = list(scale = scale,
               shape = shape)
+  class(modX) = class(object)[2]
   modX
 }
 
@@ -114,8 +118,9 @@ get_modX.exponentialX = function(object) {
                     robse = rate_rse)
   rownames(rate) = c("(Intercept)", "X", object$Z)
 
-  # Construct contents of "outcome_model" slot
+  # Construct contents of "covariate_model" slot
   modX = list(rate = rate)
+  class(modX) = class(object)[2]
   modX
 }
 
@@ -130,7 +135,8 @@ get_modX.poissonX = function(object) {
                     robse = rate_rse)
   rownames(rate) = c("(Intercept)", "X", object$Z)
 
-  # Construct contents of "outcome_model" slot
+  # Construct contents of "covariate_model" slot
   modX = list(rate = rate)
+  class(modX) = class(object)[2]
   modX
 }
