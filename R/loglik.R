@@ -38,19 +38,11 @@ loglik = function(params, dataObj, returnSum = TRUE, subdivisions){
       Yi = data_row[cens_dataObj$Y]
       Zi = data_row[cens_dataObj$Z]
       return(
-        tryCatch(expr =
-        integrate(f = calc_pYXgivZ,
-                  lower = ifelse(test = cens_dataObj$rightCens,
-                                 yes = Wi,
-                                 no = -Inf),
-                  upper = ifelse(test = cens_dataObj$rightCens,
-                                 yes = Inf,
-                                 no = Wi),
-                  subdivisions = subdivisions,
-                  y = Yi,
-                  z = Zi,
-                  object = cens_dataObj)$value,
-        error = function(err) {0})
+        integrate_loglik(object = cens_dataObj,
+                         w = Wi,
+                         y = Yi,
+                         z = Zi,
+                         subdivisions = subdivisions)
       )
     }
     int_pYXgivZ_cens = apply(X = cens_dataObj$data,
