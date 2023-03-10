@@ -64,7 +64,7 @@ calc_pXgivZ.gammaX = function(object, x, z) {
   ## Construct mean --------------------------------
   meanX = object$eta_params[2]
   if (!is.null(z)) {
-    eta1 = matrix(data = object$beta_params[-c(1:2)],
+    eta1 = matrix(data = object$eta_params[-c(1:2)],
                   ncol = 1)
     meanX = meanX + as.numeric(z %*% eta1)
   }
