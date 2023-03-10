@@ -10,7 +10,7 @@ calc_deriv2_loglik = function(params = NULL, dataObj, subdivisions) {
 
   # Create matrix to save derivatives in
   d_theta = matrix(data = 0,
-                   nrow = nrow(data),
+                   nrow = nrow(dataObj$data),
                    ncol = p ^ 2)
   start_col = 1
 
