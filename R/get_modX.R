@@ -20,7 +20,6 @@ get_modX.normalX = function(object) {
   # Construct contents of "outcome_model" slot
   modX = list(mean = mean,
               sigma2 = sigma2)
-  class(modX) = class(object)[3]
   modX
 }
 
@@ -41,7 +40,6 @@ get_modX.lognormalX = function(object) {
   # Construct contents of "outcome_model" slot
   modX = list(mean = mean,
               sigma2 = sigma2)
-  class(modX) = class(object)[3]
   modX
 }
 
@@ -73,7 +71,6 @@ get_modX.gammaX = function(object) {
   # Construct contents of "outcome_model" slot
   modX = list(mean = mean,
               shape = shape)
-  class(modX) = class(object)[3]
   modX
 }
 
@@ -103,7 +100,6 @@ get_modX.weibullX = function(object) {
   # Construct contents of "outcome_model" slot
   modX = list(scale = scale,
               shape = shape)
-  class(modX) = class(object)[3]
   modX
 }
 
@@ -120,7 +116,6 @@ get_modX.exponentialX = function(object) {
 
   # Construct contents of "outcome_model" slot
   modX = list(rate = rate)
-  class(modX) = class(object)[3]
   modX
 }
 
@@ -137,6 +132,5 @@ get_modX.poissonX = function(object) {
 
   # Construct contents of "outcome_model" slot
   modX = list(rate = rate)
-  class(modX) = class(object)[3]
   modX
 }

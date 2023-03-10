@@ -21,7 +21,6 @@ get_modY.normalY = function(object) {
   # Construct contents of "outcome_model" slot
   modY = list(mean = mean,
               sigma2 = sigma2)
-  class(modY) = class(object)[2]
   modY
 }
 
@@ -39,7 +38,6 @@ get_modY.bernoulliY = function(object) {
 
   # Construct contents of "outcome_model" slot
   modY = list(mean = mean)
-  class(modY) = class(object)[2]
   modY
 }
 
@@ -61,7 +59,6 @@ get_modY.lognormalY = function(object) {
   # Construct contents of "outcome_model" slot
   modY = list(mean = mean,
               sigma2 = sigma2)
-  class(modY) = class(object)[2]
   modY
 }
 
@@ -93,7 +90,6 @@ get_modY.gammaY = function(object) {
   # Construct contents of "outcome_model" slot
   modY = list(mean = mean,
               shape = shape)
-  class(modY) = class(object)[2]
   modY
 }
 
@@ -123,7 +119,6 @@ get_modY.weibullY = function(object) {
   # Construct contents of "outcome_model" slot
   modY = list(scale = scale,
               shape = shape)
-  class(modY) = class(object)[2]
   modY
 }
 
@@ -140,7 +135,6 @@ get_modY.exponentialY = function(object) {
 
   # Construct contents of "outcome_model" slot
   modY = list(rate = rate)
-  class(modY) = class(object)[2]
   modY
 }
 
@@ -157,6 +151,5 @@ get_modY.poissonY = function(object) {
 
   # Construct contents of "outcome_model" slot
   modY = list(rate = rate)
-  class(modY) = class(object)[2]
   modY
 }
