@@ -122,37 +122,10 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
 
     if (robcov) {
       # Derivatives of the log-likelihood
-      if (verbose) {
-        print("Get first derivatives of log-likelihood:")
-      }
       first_deriv = calc_deriv_loglik(dataObj = conv_dataObj,
                                       subdivisions = subdivisions)
-        # calc_deriv_loglik(params = param_est,
-        #                                  Y = Y,
-        #                                  X = X,
-        #                                  D = D,
-        #                                  W = W,
-        #                                  Z = Z,
-        #                                  subdivisions = subdivisions,
-        #                                  distY = distY,
-        #                                  distX = distX,
-        #                                  data = data)
-
-      if (verbose) {
-        print("Get second derivatives of log-likelihood:")
-      }
       second_deriv = calc_deriv2_loglik(dataObj = conv_dataObj,
                                         subdivisions = subdivisions)
-        # calc_deriv2_loglik(params = param_est,
-        #                                  Y = Y,
-        #                                  X = X,
-        #                                  D = D,
-        #                                  W = W,
-        #                                  Z = Z,
-        #                                  subdivisions = subdivisions,
-        #                                  distY = distY,
-        #                                  distX = distX,
-        #                                  data = data)
 
       # Sandwich covariance estimator
       ## Sandwich meat
