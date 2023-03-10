@@ -31,9 +31,9 @@ glmCensRd(
 
 \item{data}{a dataframe containing at least columns \code{Y}, \code{X}, \code{C}, \code{Z}.}
 
-\item{distY}{distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but other options are \code{"bernoulli"}, \code{"log-normal"}, \code{"gamma"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
+\item{distY}{distribution assumed for \code{Y} given \code{X} and \code{Z}. Default is \code{"normal"}, but other options are \code{"bernoulli"}, \code{"lognormal"}, \code{"gamma"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
 
-\item{distX}{distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"log-normal"}, \code{"gamma"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
+\item{distX}{distribution assumed for \code{X} given \code{Z}. Default is \code{"normal"}, but other options are \code{"lognormal"}, \code{"gamma"}, \code{"weibull"}, \code{"exponential"}, or \code{"poisson"}.}
 
 \item{rightCens}{logical. If \code{TRUE} (the default), right censoring is assumed. If \code{FALSE}, left censoring is assumed.}
 
