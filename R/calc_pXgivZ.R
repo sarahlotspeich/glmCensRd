@@ -99,7 +99,7 @@ calc_pXgivZ.weibullX = function(object, x, z) {
   ## Construct scale -------------------------------
   scaleX = object$eta_params[2]
   if (!is.null(z)) {
-    eta1 = matrix(data = eta_params[-c(1:2)],
+    eta1 = matrix(data = object$eta_params[-c(1:2)],
                   ncol = 1)
     scaleX = scaleX + as.numeric(z %*% eta1)
   }
@@ -129,7 +129,7 @@ calc_pXgivZ.exponentialX = function(object, x, z) {
   ## Construct rate  -------------------------------
   rateX = object$eta_params[1]
   if (!is.null(z)) {
-    eta1 = matrix(data = eta_params[-c(1)],
+    eta1 = matrix(data = object$eta_params[-c(1)],
                   ncol = 1)
     rateX = rateX + as.numeric(z %*% eta1)
   }
@@ -157,7 +157,7 @@ calc_pXgivZ.poissonX = function(object, x, z) {
   ## Construct rate  -------------------------------
   rateX = object$eta_params[1]
   if (!is.null(z)) {
-    eta1 = matrix(data = eta_params[-c(1)],
+    eta1 = matrix(data = object$eta_params[-c(1)],
                   ncol = 1)
     rateX = rateX + as.numeric(z %*% eta1)
   }
