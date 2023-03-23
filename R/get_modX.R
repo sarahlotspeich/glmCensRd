@@ -80,9 +80,9 @@ get_modX.weibullX = function(object) {
   rownames(shape) = c("(Intercept)")
 
   ## Scale parameter (linear function of Z)
-  scale_est = param_est[-1]
-  scale_se = param_se[-1]
-  scale_rse = param_rob_se[-1]
+  scale_est = object$params[-1]
+  scale_se = object$se[-1]
+  scale_rse = object$rob_se[-1]
   scale = data.frame(coeff = scale_est,
                      se = scale_se,
                      robse = scale_rse)
