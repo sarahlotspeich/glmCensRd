@@ -81,18 +81,14 @@ get_modX.weibullX = function(object) {
                      se = shape_se,
                      robse = shape_rse)
   rownames(shape) = c("(Intercept)")
-  param_est = object$params[-1]
-  param_se = object$se[-1]
-  param_rob_se = object$rob_se[-1]
 
   ## Scale parameter (linear function of Z)
-  dim_beta = length(object$Z) + 1
-  scale_est = param_est[1:dim_beta]
-  scale_se = param_se[1:dim_beta]
-  scale_rse = param_rob_se[1:dim_beta]
+  scale_est = param_est[-1]
+  scale_se = param_se[-1]
+  scale_rse = param_rob_se[-1]
   scale = data.frame(coeff = scale_est,
-                          se = scale_se,
-                          robse = scale_rse)
+                     se = scale_se,
+                     robse = scale_rse)
   rownames(scale) = c("(Intercept)", object$Z)
 
   # Construct contents of "covariate_model" slot
