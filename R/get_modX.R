@@ -4,7 +4,6 @@ get_modX = function(object) {
 }
 
 get_modX.normalX = function(object) {
-  # Create coefficients dataframe for outcome model
   ## Mean parameter (linear function of Z)
   mean_est = object$params[-length(object$params)]
   mean_se = object$se[-length(object$params)]
@@ -17,7 +16,7 @@ get_modX.normalX = function(object) {
   ## Error variance parameter (estimated directly)
   sigma2 = object$params[length(object$params)] ^ 2
 
-  # Construct contents of "covariate_model" slot
+  ## Construct contents of "covariate_model" slot
   modX = list(mean = mean,
               sigma2 = sigma2)
   class(modX) = class(object)[2]
@@ -25,7 +24,6 @@ get_modX.normalX = function(object) {
 }
 
 get_modX.lognormalX = function(object) {
-  # Create coefficients dataframe for outcome model
   ## Mean parameter (linear function of Z)
   mean_est = object$params[-length(object$params)]
   mean_se = object$se[-length(object$params)]
@@ -38,7 +36,7 @@ get_modX.lognormalX = function(object) {
   ## Error variance parameter (estimated directly)
   sigma2 = object$params[length(object$params)] ^ 2
 
-  # Construct contents of "covariate_model" slot
+  ## Construct contents of "covariate_model" slot
   modX = list(mean = mean,
               sigma2 = sigma2)
   class(modX) = class(object)[2]
@@ -46,7 +44,6 @@ get_modX.lognormalX = function(object) {
 }
 
 get_modX.gammaX = function(object) {
-  # Create coefficients dataframe for predictor model
   ## Shape parameter (estimated directly)
   shape_est = object$params[1]
   shape_se = object$se[1]
@@ -65,7 +62,7 @@ get_modX.gammaX = function(object) {
                     robse = mean_rse)
   rownames(mean) = c("(Intercept)", object$Z)
 
-  # Construct contents of "covariate_model" slot
+  ## Construct contents of "covariate_model" slot
   modX = list(mean = mean,
               shape = shape)
   class(modX) = class(object)[2]
@@ -91,7 +88,7 @@ get_modX.weibullX = function(object) {
                      robse = scale_rse)
   rownames(scale) = c("(Intercept)", object$Z)
 
-  # Construct contents of "covariate_model" slot
+  ## Construct contents of "covariate_model" slot
   modX = list(scale = scale,
               shape = shape)
   class(modX) = class(object)[2]
@@ -99,7 +96,6 @@ get_modX.weibullX = function(object) {
 }
 
 get_modX.exponentialX = function(object) {
-  # Create coefficients dataframe for outcome model
   ## Rate parameter (linear function of Z)
   rate_est = object$params
   rate_se = object$se
