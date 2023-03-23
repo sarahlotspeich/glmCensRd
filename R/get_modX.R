@@ -103,7 +103,7 @@ get_modX.exponentialX = function(object) {
   rate = data.frame(coeff = rate_est,
                     se = rate_se,
                     robse = rate_rse)
-  rownames(rate) = c("(Intercept)", "X", object$Z)
+  rownames(rate) = c("(Intercept)", object$Z)
 
   # Construct contents of "covariate_model" slot
   modX = list(rate = rate)
@@ -120,7 +120,7 @@ get_modX.poissonX = function(object) {
   rate = data.frame(coeff = rate_est,
                     se = rate_se,
                     robse = rate_rse)
-  rownames(rate) = c("(Intercept)", "X", object$Z)
+  rownames(rate) = c("(Intercept)", object$Z)
 
   # Construct contents of "covariate_model" slot
   modX = list(rate = rate)
