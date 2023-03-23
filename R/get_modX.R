@@ -56,15 +56,10 @@ get_modX.gammaX = function(object) {
                      robse = shape_rse)
   rownames(shape) = c("(Intercept)")
 
-  est = object$params[-1]
-  se = object$se[-1]
-  rob_se = object$rob_se[-1]
-
   ## Mean parameter (linear function of Z)
-  dim_beta = length(object$Z) + 1
-  mean_est = object$params[1:dim_beta]
-  mean_se = object$se[1:dim_beta]
-  mean_rse = object$rob_se[1:dim_beta]
+  mean_est = object$params[-1]
+  mean_se = object$se[-1]
+  mean_rse = object$rob_se[-1]
   mean = data.frame(coeff = mean_est,
                     se = mean_se,
                     robse = mean_rse)

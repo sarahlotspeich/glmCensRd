@@ -12,3 +12,5 @@ glmCensRd.Rproj
 .Rbuildignore
 
 .Rproj.user/shared/notebooks/
+
+*.history
