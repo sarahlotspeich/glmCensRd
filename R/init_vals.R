@@ -41,11 +41,11 @@ init_valsX = function(object) {
 }
 
 init_valsX.normalX = function(object) {
-  c(rep(0, 1 + length(object$Z)), 1)
+  c(rep(0, 1 + length(object$Z)), sd(with(dataObj, data[, X]), na.rm = TRUE))
 }
 
 init_valsX.lognormalX = function(object) {
-  c(rep(0, 1 + length(object$Z)), 1)
+  c(rep(0, 1 + length(object$Z)), sd(with(dataObj, data[, X]), na.rm = TRUE))
 }
 
 init_valsX.gammaX = function(object) {
