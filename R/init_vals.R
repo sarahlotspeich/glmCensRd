@@ -4,11 +4,11 @@ init_valsY = function(object) {
 }
 
 init_valsY.normalY = function(object) {
-  c(rep(0, 2 + length(object$Z)), 1)
+  c(rep(0, 2 + length(object$Z)), sd(with(dataObj, data[, Y])))
 }
 
 init_valsY.lognormalY = function(object) {
-  c(rep(0, 2 + length(object$Z)), 1)
+  c(rep(0, 2 + length(object$Z)), sd(with(dataObj, data[, Y])))
 }
 
 init_valsY.bernoulliY = function(object) {
