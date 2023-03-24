@@ -56,8 +56,7 @@ cc_loglik_outcome = function(params, dataObj, returnSum = TRUE) {
   loglikObj$params = params
 
   ## Add separate beta and eta parameters
-  loglikObj$beta_params = get_beta_params(loglikObj)
-  loglikObj$eta_params = params[-c(1:length(loglikObj$beta_params))]
+  loglikObj$beta_params = params
 
   ####################################################
   # Conditional density P(Y|X,Z) #####################
@@ -103,8 +102,7 @@ cc_loglik_covariate = function(params, dataObj, returnSum = TRUE) {
   loglikObj$params = params
 
   ## Add separate beta and eta parameters
-  loglikObj$beta_params = get_beta_params(loglikObj)
-  loglikObj$eta_params = params[-c(1:length(loglikObj$beta_params))]
+  loglikObj$eta_params = params
 
   ####################################################
   # Conditional density P(X|Z) #######################
