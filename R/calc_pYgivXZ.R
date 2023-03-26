@@ -128,7 +128,7 @@ calc_pYgivXZ.weibullY = function(object, y, x, z) {
   scaleY = object$beta_params[2] + object$beta_params[3] * x
   if (!is.null(z)) {
     beta2 = matrix(data = beta_params[-c(1:3)],
-                    ncol = 1)
+                   ncol = 1)
     scaleY = scaleY + as.numeric(z %*% beta2)
   }
   # --------------------------------- Get parameters
@@ -159,7 +159,7 @@ calc_pYgivXZ.exponentialY = function(object, y, x, z) {
   rateY = object$beta_params[1] + object$beta_params[2] * x
   if (!is.null(z)) {
     beta2 = matrix(data = beta_params[-c(1:2)],
-                    ncol = 1)
+                   ncol = 1)
     rateY = rateY + as.numeric(z %*% beta2)
   }
   # --------------------------------- Get parameters
