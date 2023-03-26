@@ -143,10 +143,14 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                   nrow = length(param_est),
                   ncol = length(param_est),
                   byrow = TRUE)
-
+      A_inv = tryCatch(expr = solve(A),
+                       error = function(c) matrix(data = NA,
+                                                  nrow = length(param_est),
+                                                  ncol = length(param_est))
+      )
       ## Sandwich covariance
       n = nrow(data)
-      param_rob_vcov = solve(A) %*% B %*% t(solve(A))
+      param_rob_vcov = A_inv %*% B %*% t(A_inv)
       param_rob_se = sqrt(diag(param_rob_vcov)) / sqrt(n)
     } else {
       param_rob_vcov = matrix(data = NA,
