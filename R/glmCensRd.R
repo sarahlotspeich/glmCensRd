@@ -199,8 +199,8 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
   # Return model results #############################
   ####################################################
   ## Start with a list of class "glmCensRd"
-  res = list(outcome_model = modY,
-             covariate_model = modX,
+  res = list(outcome_model = unclass(modY),
+             covariate_model = unclass(modX),
              code = mod$code,
              vcov = param_vcov,
              rvcov = param_rob_vcov)
