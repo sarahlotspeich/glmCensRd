@@ -104,7 +104,7 @@ calc_pYgivXZ.gammaY = function(object, y, x, z) {
     rep(NA, length(y))
   } else {
     suppressWarnings(
-      pYgivXZ = dgamma(x = y, shape = shapeY, scale = scaleY)
+      pYgivXZ <- dgamma(x = y, shape = shapeY, scale = scaleY)
     )
     pYgivXZ[scaleY <= 0] = NA
     pYgivXZ
@@ -138,7 +138,7 @@ calc_pYgivXZ.weibullY = function(object, y, x, z) {
     rep(NA, length(y))
   } else {
     suppressWarnings(
-      pYgivXZ = dweibull(x = y, shape = shapeY, scale = scaleY)
+      pYgivXZ <- dweibull(x = y, shape = shapeY, scale = scaleY)
     )
     pYgivXZ[scaleY <= 0] = NA
     pYgivXZ
@@ -166,7 +166,7 @@ calc_pYgivXZ.exponentialY = function(object, y, x, z) {
 
   # Calculate --------------------------------------
   suppressWarnings(
-    pYgivXZ = dexp(x = y, rate = rateY)
+    pYgivXZ <- dexp(x = y, rate = rateY)
   )
   # -------------------------------------- Calculate
   # Check: rate of exponential > 0 -----------------
@@ -195,7 +195,7 @@ calc_pYgivXZ.poissonY = function(object, y, x, z) {
 
   # Calculate --------------------------------------
   suppressWarnings(
-    pYgivXZ = dpois(x = y, lambda = rateY)
+    pYgivXZ <- dpois(x = y, lambda = rateY)
   )
   # -------------------------------------- Calculate
   # Check: rate of Poisson > 0 ---------------------
