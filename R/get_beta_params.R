@@ -8,6 +8,11 @@ get_beta_params.normalY = function(object) {
   object$params[1:(3 + lengthZ)]
 }
 
+get_beta_params.bernoulliY = function(object) {
+  lengthZ = length(object$Z)
+  object$params[1:(2 + lengthZ)]
+}
+
 get_beta_params.lognormalY = function(object) {
   lengthZ = length(object$Z)
   object$params[1:(3 + lengthZ)]
