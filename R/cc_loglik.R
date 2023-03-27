@@ -46,7 +46,6 @@ cc_loglik = function(params, dataObj, returnSum = TRUE) {
   }
 }
 
-#' @export
 cc_loglik_outcome = function(params, dataObj, returnSum = TRUE) {
   ####################################################
   # Create log-likelihood object #####################
