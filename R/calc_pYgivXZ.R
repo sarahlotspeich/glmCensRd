@@ -65,7 +65,7 @@ calc_pYgivXZ.bernoulliY = function(object, y, x, z) {
   ## Construct mean --------------------------------
   meanY = object$beta_params[1] + object$beta_params[2] * x
   if (!is.null(z)) {
-    beta2 = matrix(data = object$beta_params[-c(1:2, length(object$beta_params))],
+    beta2 = matrix(data = object$beta_params[-c(1:2)],
                    ncol = 1)
     meanY = meanY + as.numeric(z %*% beta2)
   }
