@@ -53,7 +53,7 @@ init_valsX.gammaX = function(object) {
 }
 
 init_valsX.weibullX = function(object) {
-  rep(1E-4, 2 + length(object$Z))
+  c(1, rep(1E-4, 1 + length(object$Z)))
 }
 
 init_valsX.inversegaussianX = function(object) {
@@ -69,6 +69,6 @@ init_valsX.poissonX = function(object) {
 }
 
 # Get initial values for both models
-init_vals = function(object) {
+init_vals_naive = function(object) {
   c(init_valsY(object), init_valsX(object))
 }

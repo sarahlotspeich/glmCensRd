@@ -57,48 +57,21 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                      )
 
   # Initial parameter values
-  ## Naive initial params (for complete-case)
-  if (verbose) {
-    print("Start with naive initial values:")
-  }
-  params0 = init_vals(object = dataObj)
-  if (verbose) {
-    print(params0)
-  }
-  if (verbose) {
-    print("Fit complete-case initial values:")
-  }
-
-  ## Use complete-case MLE
-  cc_dataObj = dataObj
-  cc_dataObj$data = data[data[, D] == 1, ]
-  suppressWarnings(
-    cc_mod <- nlm(f = cc_loglik,
-                  p = params0,
-                  dataObj = cc_dataObj,
-                  steptol = steptol,
-                  iterlim = iterlim,
-                  hessian = FALSE
-                  )
-    )
-  if (cc_mod$code <= 2 & cc_mod$iterations > 1) {
-    params0 = cc_mod$estimate
-  }
-  if (verbose) {
-    print(params0)
-  }
+  params0 = init_vals_cc(dataObj = dataObj,
+                         D = D,
+                         verbose = verbose)
 
   if (verbose) {
     print("Fit full MLE:")
   }
-  suppressWarnings(
-    mod <- nlm(f = loglik,
-               p = params0,
-               dataObj = dataObj,
-               subdivisions = subdivisions,
-               steptol = steptol,
-               iterlim = iterlim,
-               hessian = TRUE)
+  mod = suppressWarnings(
+    nlm(f = loglik,
+        p = params0,
+        dataObj = dataObj,
+        subdivisions = subdivisions,
+        steptol = steptol,
+        iterlim = iterlim,
+        hessian = TRUE)
   )
   if (verbose) {
     print(mod$estimate)
