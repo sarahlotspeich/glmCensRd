@@ -1,4 +1,4 @@
-init_vals_cc = function(dataObj, D, verbose) {
+init_vals_cc = function(dataObj, D, steptol, iterlim, verbose) {
   # Initial parameter values
   ## Naive initial params (for complete-case)
   if (verbose) {

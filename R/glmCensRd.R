@@ -59,6 +59,8 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
   # Initial parameter values
   params0 = init_vals_cc(dataObj = dataObj,
                          D = D,
+                         steptol = steptol,
+                         iterlim = iterlim,
                          verbose = verbose)
 
   if (verbose) {
