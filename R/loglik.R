@@ -25,9 +25,11 @@ loglik = function(params, dataObj, returnSum = TRUE, subdivisions){
   ll = cc_loglik(params = params,
                  dataObj = uncens_dataObj,
                  returnSum = returnSum)
+  ## If returnSum, cc_loglik() returns (-1) x log-
+  ## likelihood for use with nlm()
   ll = ll * ifelse(test = returnSum,
-                   yes = -1,
-                   no = 1) # if returnSum, negate ll
+                   yes = -1, ### cancel this out
+                   no = 1)
 
   ####################################################
   # Log-likelihood of censored observations ##########
@@ -53,11 +55,19 @@ loglik = function(params, dataObj, returnSum = TRUE, subdivisions){
 
     if (returnSum) {
       ll = ll + sum(log_int_pYXgivZ_cens)
-      # Return (-1) x log-likelihood for use with nlm() --
-      return(- ll)
     } else {
       ll = c(ll, log_int_pYXgivZ_cens)
-      return(ll)
     }
+  }
+
+  ####################################################
+  # Return ###########################################
+  ####################################################
+  if (returnSum) {
+    ## Return (-1) x log-likelihood for use with nlm()
+    return(- ll)
+  } else {
+    ## Return vector of log-likelihoods --------------
+    return(ll)
   }
 }
