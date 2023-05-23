@@ -20,7 +20,7 @@ init_valsY.gammaY = function(object) {
 }
 
 init_valsY.weibullY = function(object) {
-  rep(1E-4, 3 + length(object$Z))
+  c(1, rep(1E-4, 2 + length(object$Z)))
 }
 
 init_valsY.inversegaussianY = function(object) {
