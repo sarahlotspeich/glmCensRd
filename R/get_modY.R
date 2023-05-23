@@ -11,8 +11,8 @@ get_modY.normalY = function(object) {
   mean_se = object$se[1:dim_beta]
   mean_rse = object$rob_se[1:dim_beta]
   mean = data.frame(coeff = mean_est,
-                         se = mean_se,
-                         robse = mean_rse)
+                    se = mean_se,
+                    robse = mean_rse)
   rownames(mean) = c("(Intercept)", "X", object$Z)
 
   ## Error variance parameter (estimated directly)
