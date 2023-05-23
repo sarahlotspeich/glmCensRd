@@ -47,22 +47,22 @@ init_valsX = function(object) {
 }
 
 init_valsX.normalX = function(object) {
-  c(mean(object$data[, object$X], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, Y])))
+  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, Y])))
   #c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
 }
 
 init_valsX.lognormalX = function(object) {
-  c(mean(object$data[, object$X], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, Y])))
+  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, Y])))
   #c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
 }
 
 init_valsX.gammaX = function(object) {
-  c(1, mean(object$data[, object$X], na.rm = TRUE), rep(1E-4, length(object$Z)))
+  c(1, mean(object$data[, "X"], na.rm = TRUE), rep(1E-4, length(object$Z)))
   #rep(1E-4, 2 + length(object$Z))
 }
 
 init_valsX.weibullX = function(object) {
-  c(1, mean(object$data[, object$X], na.rm = TRUE), rep(1E-4, length(object$Z)))
+  c(1, mean(object$data[, "X"], na.rm = TRUE), rep(1E-4, length(object$Z)))
   #c(1, rep(1E-4, 1 + length(object$Z)))
 }
 
@@ -71,12 +71,12 @@ init_valsX.inversegaussianX = function(object) {
 }
 
 init_valsX.exponentialX = function(object) {
-  c(mean(object$data[, object$X], na.rm = TRUE), rep(0, length(object$Z)))
+  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)))
   #c(1E-4, rep(0, length(object$Z)))
 }
 
 init_valsX.poissonX = function(object) {
-  c(mean(object$data[, object$X], na.rm = TRUE), rep(0, length(object$Z)))
+  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)))
   #c(1E-4, rep(0, length(object$Z)))
 }
 
