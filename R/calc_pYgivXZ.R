@@ -71,8 +71,7 @@ calc_pYgivXZ.bernoulliY = function(object, y, x, z) {
   }
   # --------------------------------- Get parameters
   # Calculate --------------------------------------
-  pYgivXZ = exp(- (1 - y) * meanY) / (1 + exp(meanY))
-  pYgivXZ[y == 0] = 1 - pYgivXZ[y == 0]
+  pYgivXZ = exp(- (1 - y) * meanY) / (1 + exp(-meanY))
   pYgivXZ
   # -------------------------------------- Calculate
 }
