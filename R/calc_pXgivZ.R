@@ -158,7 +158,7 @@ calc_pXgivZ.poissonX = function(object, x, z) {
   # --------------------------------- Get parameters
 
   # Calculate --------------------------------------
-  pXgivZ = dpois(x = x, lambda = rateX)
+  pXgivZ = rateX ^ x * exp(- rateX) / factorial(x = x)
   # -------------------------------------- Calculate
   # Check: rate of Poisson > 0 ---------------------
   pXgivZ[rateX <= 0] = NA
