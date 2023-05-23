@@ -4,11 +4,13 @@ init_valsY = function(object) {
 }
 
 init_valsY.normalY = function(object) {
-  c(rep(0, 2 + length(object$Z)), sd(with(object, data[, Y])))
+  c(mean(object$data[, object$Y]), rep(0, 1 + length(object$Z)), sd(with(object, data[, Y])))
+  #c(rep(0, 2 + length(object$Z)), sd(with(object, data[, Y])))
 }
 
 init_valsY.lognormalY = function(object) {
-  c(rep(0, 2 + length(object$Z)), sd(with(object, data[, Y])))
+  c(mean(object$data[, object$Y]), rep(0, 1 + length(object$Z)), sd(with(object, data[, Y])))
+  #c(rep(0, 2 + length(object$Z)), sd(with(object, data[, Y])))
 }
 
 init_valsY.bernoulliY = function(object) {
@@ -16,11 +18,13 @@ init_valsY.bernoulliY = function(object) {
 }
 
 init_valsY.gammaY = function(object) {
-  rep(1E-4, 3 + length(object$Z))
+  c(1, mean(object$data[, object$Y]), rep(1E-4, 1 + length(object$Z)))
+  #rep(1E-4, 3 + length(object$Z))
 }
 
 init_valsY.weibullY = function(object) {
-  c(1, rep(1E-4, 2 + length(object$Z)))
+  c(1, mean(object$data[, object$Y]), rep(1E-4, 1 + length(object$Z)))
+  #c(1, rep(1E-4, 2 + length(object$Z)))
 }
 
 init_valsY.inversegaussianY = function(object) {
@@ -28,11 +32,13 @@ init_valsY.inversegaussianY = function(object) {
 }
 
 init_valsY.exponentialY = function(object) {
-  c(1E-4, rep(0, 1 + length(object$Z)))
+  c(mean(object$data[, object$Y]), rep(0, 1 + length(object$Z)))
+  #c(1E-4, rep(0, 1 + length(object$Z)))
 }
 
 init_valsY.poissonY = function(object) {
-  c(1E-4, rep(0, 1 + length(object$Z)))
+  c(mean(object$data[, object$Y]), rep(0, 1 + length(object$Z)))
+  #c(1E-4, rep(0, 1 + length(object$Z)))
 }
 
 # Get initial values for model of X|Z
@@ -41,19 +47,23 @@ init_valsX = function(object) {
 }
 
 init_valsX.normalX = function(object) {
-  c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
+  c(mean(object$data[, object$X], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, Y])))
+  #c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
 }
 
 init_valsX.lognormalX = function(object) {
-  c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
+  c(mean(object$data[, object$X], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, Y])))
+  #c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
 }
 
 init_valsX.gammaX = function(object) {
-  rep(1E-4, 2 + length(object$Z))
+  c(1, mean(object$data[, object$X], na.rm = TRUE), rep(1E-4, length(object$Z)))
+  #rep(1E-4, 2 + length(object$Z))
 }
 
 init_valsX.weibullX = function(object) {
-  c(1, rep(1E-4, 1 + length(object$Z)))
+  c(1, mean(object$data[, object$X], na.rm = TRUE), rep(1E-4, length(object$Z)))
+  #c(1, rep(1E-4, 1 + length(object$Z)))
 }
 
 init_valsX.inversegaussianX = function(object) {
@@ -61,11 +71,13 @@ init_valsX.inversegaussianX = function(object) {
 }
 
 init_valsX.exponentialX = function(object) {
-  c(1E-4, rep(0, length(object$Z)))
+  c(mean(object$data[, object$X], na.rm = TRUE), rep(0, length(object$Z)))
+  #c(1E-4, rep(0, length(object$Z)))
 }
 
 init_valsX.poissonX = function(object) {
-  c(1E-4, rep(0, length(object$Z)))
+  c(mean(object$data[, object$X], na.rm = TRUE), rep(0, length(object$Z)))
+  #c(1E-4, rep(0, length(object$Z)))
 }
 
 # Get initial values for both models
