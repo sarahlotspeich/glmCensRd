@@ -99,7 +99,7 @@ calc_pYgivXZ.gammaY = function(object, y, x, z) {
   # --------------------------------- Get parameters
 
   # Calculate --------------------------------------
-  if (shapeY <= 0) {
+  if (shapeY <= 0 | any(scaleY <= 0)) {
     rep(NA, length(y))
   } else {
     pYgivXZ = dgamma(x = y, shape = shapeY, scale = scaleY)
@@ -131,7 +131,7 @@ calc_pYgivXZ.weibullY = function(object, y, x, z) {
   # --------------------------------- Get parameters
 
   # Calculate --------------------------------------
-  if (shapeY <= 0) {
+  if (shapeY <= 0 | any(scaleY <= 0)) {
     rep(NA, length(y))
   } else {
     pYgivXZ = dweibull(x = y, shape = shapeY, scale = scaleY)
@@ -270,7 +270,7 @@ calc_pXgivZ.gammaX = function(object, x, z) {
   # --------------------------------- Get parameters
 
   # Calculate --------------------------------------
-  if (shapeX <= 0) {
+  if (shapeX <= 0 | any(scaleX <= 0)) {
     rep(NA, length(x))
   } else {
     pXgivZ = dgamma(x = x, shape = shapeX, scale = scaleX)
@@ -301,7 +301,7 @@ calc_pXgivZ.weibullX = function(object, x, z) {
   # --------------------------------- Get parameters
 
   # Calculate --------------------------------------
-  if (shapeX <= 0) {
+  if (shapeX <= 0 | any(scaleX <= 0)) {
     rep(NA, length(x))
   } else {
     pXgivZ = dweibull(x = x, shape = shapeX, scale = scaleX)
