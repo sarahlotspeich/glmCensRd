@@ -1,6 +1,6 @@
 <p style="display:inline-block;">
-  <img src="glmCensRd_hex.png" width="200" title="">
-  <h1>`glmCensRd`: Fitting generalized linear models with censored predictors in `R`</h1>
+  <img src="glmCensRd-hex.png" width="200" title="">
+  <h1> glmCensRd: Fitting generalized linear models with censored predictors in R</h1>
 </p>
 
 Sarah C. Lotspeich, Peter Guan, and Tanya P. Garcia
