@@ -1,6 +1,23 @@
 # Get initial values for model of Y|X,Z
 init_valsY = function(object) {
-  UseMethod("init_valsY")
+  #UseMethod("init_valsY")
+  if (object$distY == "normal") {
+    init_valsY.normalY(object = object)
+  } else if (object$distY == "lognormal") {
+    init_valsY.lognormalY(object = object)
+  } else if (object$distY == "bernoulli") {
+    init_valsY.bernoulliY(object = object)
+  } else if (object$distY == "gamma") {
+    init_valsY.gammaY(object = object)
+  } else if (object$distY == "weibull") {
+    init_valsY.weibullY(object = object)
+  } else if (object$distY == "inversegaussian") {
+    init_valsY.inversegaussianY(object = object)
+  } else if (object$distY == "exponential") {
+    init_valsY.exponentialY(object = object)
+  } else if (object$distY == "poisson") {
+    init_valsY.poissonY(object = object)
+  }
 }
 
 init_valsY.normalY = function(object) {
@@ -43,16 +60,31 @@ init_valsY.poissonY = function(object) {
 
 # Get initial values for model of X|Z
 init_valsX = function(object) {
-  UseMethod("init_valsX")
+  #UseMethod("init_valsX")
+  if (object$distX == "normal") {
+    init_valsX.normalX(object = object)
+  } else if (object$distX == "lognormal") {
+    init_valsX.lognormalX(object = object)
+  } else if (object$distX == "gamma") {
+    init_valsX.gammaX(object = object)
+  } else if (object$distX == "weibull") {
+    init_valsX.weibullX(object = object)
+  } else if (object$distX == "inversegaussian") {
+    init_valsX.inversegaussianX(object = object)
+  } else if (object$distX == "exponential") {
+    init_valsX.exponentialX(object = object)
+  } else if (object$distX == "poisson") {
+    init_valsX.poissonX(object = object)
+  }
 }
 
 init_valsX.normalX = function(object) {
-  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, Y])))
+  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, "X"])))
   #c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
 }
 
 init_valsX.lognormalX = function(object) {
-  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, Y])))
+  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, "X"])))
   #c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
 }
 
