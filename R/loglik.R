@@ -71,3 +71,48 @@ loglik = function(params, dataObj, returnSum = TRUE, subdivisions){
     return(ll)
   }
 }
+
+integrate_loglik = function(object, w, y, z, subdivisions) {
+  #UseMethod("integrate_loglik")
+  if (object$rightCens) {
+    integrate_loglik.rightCensRd(object = object,
+                                 w = w,
+                                 y = y,
+                                 z = z,
+                                 subdivisions = subdivisions)
+  } else {
+    integrate_loglik.leftCensRd(object = object,
+                                w = w,
+                                y = y,
+                                z = z,
+                                subdivisions = subdivisions)
+  }
+}
+
+integrate_loglik.rightCensRd = function(object, w, y, z, subdivisions) {
+  tryCatch(
+    expr = integrate(
+      f = calc_pYXgivZ,
+      lower = w,
+      upper = Inf,
+      subdivisions = subdivisions,
+      y = y,
+      z = z,
+      object = object)$value,
+    error = function(err) {0}
+  )
+}
+
+integrate_loglik.leftCensRd = function(object, w, y, z, subdivisions) {
+  tryCatch(
+    expr = integrate(
+      f = calc_pYXgivZ,
+      lower = -Inf,
+      upper = w,
+      subdivisions = subdivisions,
+      y = y,
+      z = z,
+      object = object)$value,
+    error = function(err) {0}
+  )
+}
