@@ -1,6 +1,42 @@
 # Calculate probabilities/densities from model of Y|X,Z
 calc_pYgivXZ = function(object, y, x, z) {
-  UseMethod("calc_pYgivXZ")
+  #UseMethod("calc_pYgivXZ")
+  if (object$distY == "normal") {
+    calc_pYgivXZ.normalY(object = object,
+                         y = y,
+                         x = x,
+                         z = z)
+  } else if (object$distY == "lognormal") {
+    calc_pYgivXZ.lognormalY(object = object,
+                            y = y,
+                            x = x,
+                            z = z)
+  } else if (object$distY == "bernoulli") {
+    calc_pYgivXZ.bernoulliY(object = object,
+                            y = y,
+                            x = x,
+                            z = z)
+  } else if (object$distY == "gamma") {
+    calc_pYgivXZ.gammaY(object = object,
+                        y = y,
+                        x = x,
+                        z = z)
+  } else if (object$distY == "weibull") {
+    calc_pYgivXZ.weibullY(object = object,
+                          y = y,
+                          x = x,
+                          z = z)
+  } else if (object$distY == "exponential") {
+    calc_pYgivXZ.exponentialY(object = object,
+                              y = y,
+                              x = x,
+                              z = z)
+  } else if (object$distY == "poisson") {
+    calc_pYgivXZ.poissonY(object = object,
+                          y = y,
+                          x = x,
+                          z = z)
+  }
 }
 
 calc_pYgivXZ.normalY = function(object, y, x, z) {
@@ -197,7 +233,32 @@ calc_pYgivXZ.poissonY = function(object, y, x, z) {
 
 # Calculate probabilities/densities from model of X|Z
 calc_pXgivZ = function(object, x, z) {
-  UseMethod("calc_pXgivZ")
+  #UseMethod("calc_pXgivZ")
+  if (object$distX == "normal") {
+    calc_pXgivZ.normalX(object = object,
+                        x = x,
+                        z = z)
+  } else if (object$distX == "lognormal") {
+    calc_pXgivZ.lognormalX(object = object,
+                           x = x,
+                           z = z)
+  } else if (object$distX == "gamma") {
+    calc_pXgivZ.gammaX(object = object,
+                       x = x,
+                       z = z)
+  } else if (object$distX == "weibull") {
+    calc_pXgivZ.weibullX(object = object,
+                         x = x,
+                         z = z)
+  } else if (object$distX == "exponential") {
+    calc_pXgivZ.exponentialX(object = object,
+                             x = x,
+                             z = z)
+  } else if (object$distX == "poisson") {
+    calc_pXgivZ.poissonX(object = object,
+                         x = x,
+                         z = z)
+  }
 }
 
 calc_pXgivZ.normalX = function(object, x, z) {
