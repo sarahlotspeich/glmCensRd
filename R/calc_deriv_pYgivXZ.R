@@ -1,6 +1,42 @@
 # Calculate probabilities/densities from model of Y|X,Z
 calc_deriv_pYgivXZ = function(object, y, x, z) {
-  UseMethod("calc_deriv_pYgivXZ")
+  # UseMethod("calc_deriv_pYgivXZ")
+  if (object$distY == "normal") {
+    calc_deriv_pYgivXZ.normalY(object = object,
+                               y = y,
+                               x = x,
+                               z = z)
+  } else if (object$distY == "lognormal") {
+    calc_deriv_pYgivXZ.lognormalY(object = object,
+                                  y = y,
+                                  x = x,
+                                  z = z)
+  } else if (object$distY == "bernoulli") {
+    calc_deriv_pYgivXZ.bernoulliY(object = object,
+                                  y = y,
+                                  x = x,
+                                  z = z)
+  } else if (object$distY == "gamma") {
+    calc_deriv_pYgivXZ.gammaY(object = object,
+                              y = y,
+                              x = x,
+                              z = z)
+  } else if (object$distY == "weibull") {
+    calc_deriv_pYgivXZ.weibullY(object = object,
+                                y = y,
+                                x = x,
+                                z = z)
+  } else if (object$distY == "exponential") {
+    calc_deriv_pYgivXZ.exponentialY(object = object,
+                                    y = y,
+                                    x = x,
+                                    z = z)
+  } else if (object$distY == "poisson") {
+    calc_deriv_pYgivXZ.poissonY(object = object,
+                                y = y,
+                                x = x,
+                                z = z)
+  }
 }
 
 calc_deriv_pYgivXZ.normalY = function(object, y, x, z) {
