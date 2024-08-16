@@ -79,12 +79,12 @@ init_valsX = function(object) {
 }
 
 init_valsX.normalX = function(object) {
-  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, "X"])))
+  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
   #c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
 }
 
 init_valsX.lognormalX = function(object) {
-  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, "X"])))
+  c(mean(object$data[, "X"], na.rm = TRUE), rep(0, length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
   #c(rep(0, 1 + length(object$Z)), sd(with(object, data[, "X"]), na.rm = TRUE))
 }
 
