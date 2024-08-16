@@ -35,9 +35,6 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
   ## Make it NA for censored (D = 0)
   data[data[, D] == 0, "X"] = NA
 
-  ## Define column X variable name
-  X = "X"
-
   ## Create a list containing data and other inputs
   ### This list will be fed to functions later to reduce the number of arguments
   dataObj = list(Y = Y,
@@ -45,16 +42,18 @@ glmCensRd = function(Y, W, D, Z = NULL, data,  distY = "normal", distX = "normal
                  D = D,
                  Z = Z,
                  data = data,
-                 rightCens = rightCens
+                 rightCens = rightCens, # direction of censoring (if TRUE, right; if FALSE, left)
+                 distY = distY, # distribution for Y|X,Z
+                 distX = distX # distribution for Z|Z
                  )
 
-  class(dataObj) = c(paste0(distY, "Y"), # distribution for Y|X,Z
-                     paste0(distX, "X"), # distribution for Z|Z
-                     ifelse(test = rightCens, # direction of censoring
-                            yes = "rightCensRd",
-                            no = "leftCensRd"
-                            )
-                     )
+  # class(dataObj) = c(paste0(distY, "Y"), # distribution for Y|X,Z
+  #                    paste0(distX, "X"), # distribution for Z|Z
+  #                    ifelse(test = rightCens, # direction of censoring
+  #                           yes = "rightCensRd",
+  #                           no = "leftCensRd"
+  #                           )
+  #                    )
 
   # Initial parameter values
   params0 = init_vals_cc(dataObj = dataObj,
