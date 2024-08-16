@@ -1,6 +1,21 @@
 # Calculate probabilities/densities from model of Y|X,Z
 get_modY = function(object) {
-  UseMethod("get_modY")
+  # UseMethod("get_modY")
+  if (object$distY == "normal") {
+    get_modY.normalY(object = object)
+  } else if (object$distY == "lognormal") {
+    get_modY.bernoulliY(object = object)
+  } else if (object$distY == "bernoulli") {
+    get_modY.bernoulliY(object = object)
+  } else if (object$distY == "gamma") {
+    get_modY.gammaY(object = object)
+  } else if (object$distY == "weibull") {
+    get_modY.weibullY(object = object)
+  } else if (object$distY == "exponential") {
+    get_modY.exponentialY(object = object)
+  } else if (object$distY == "poisson") {
+    get_modY.poissonY(object = object)
+  }
 }
 
 get_modY.normalY = function(object) {
